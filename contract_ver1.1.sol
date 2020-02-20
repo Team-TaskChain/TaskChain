@@ -2,7 +2,7 @@ pragma solidity >=0.5.0 <0.7.0;
 
 contract TaskTask {
     // defines user account Types
-    enum AccountType {Owner, Arbitor, Worker, Creator}
+    enum AccountType {Owner, Arbiter, Executor, Creator}
     // defines user tiers, in order
     enum UserTier {One, Two, Three}
 
