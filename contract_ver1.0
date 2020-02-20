@@ -1,0 +1,56 @@
+pragma solidity >=0.5.0 <0.7.0;
+contract TaskTask {
+    enum AccountType {Owner, Arbitor, Worker, Creator}
+    enum UserTier {One, Two, Three}
+
+    uint256 public accountCount;
+
+    address owner;
+
+    constructor(address payable _wallet) public {
+        wallet = _wallet;
+        owner = msg.sender;
+    }
+
+    struct UserAccount {
+        bool isRegistered;
+        string Username;
+        uint256 Rating;
+        uint256 userFunds;
+    }
+    struct TaskWork {
+        bool isOpen;
+        string taskName;
+        uint256 escrow;
+        uint256 payout;
+        uint256 openTime;
+        uint256 closeTime;
+        uint256 usersFinished;
+    }
+
+    mapping(address => uint256) public balances;
+    mapping(uint256 => UserAccount) public accounts;
+
+    function buyToken() public payable {
+        balances[msg.sender] += 1;
+        wallet.transfer(msg.value);
+    }
+
+    address payable wallet;
+
+    function addUserAccount(
+        bool _isRegistered,
+        string memory _Username,
+        uint256 _Rating,
+        uint256 _userFunds
+    ) public {
+        accountCount += 1;
+        accounts[accountCount] = UserAccount(
+            _isRegistered,
+            _Username,
+            _Rating,
+            _userFunds
+        );
+
+    }
+}
