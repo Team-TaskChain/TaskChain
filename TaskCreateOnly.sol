@@ -1,5 +1,54 @@
 pragma solidity >=0.4.22 <0.7.0;
 
+
+// NEW CODE	 
+contract TaskCreateTest {
+	    
+  address owner;
+  uint public value;
+  uint public balance;
+  uint public quota;
+  uint public payout;
+  address payable public ContractOwner;
+  address payable public worker;
+  
+  uint public conntractStartTime;
+  uint public contractEndTime;
+  
+ 
+  mapping(address => uint) workPayed;
+  
+  bool ended;
+  
+  event ContractCreated(address Creator, uint value);
+  event ContractClosed(address Creator, uint payout);
+  event workDone(address Worker, uint balanceContract);
+  
+    struct TaskContract {
+	        uint quota;
+	        uint payout;
+            uint value;
+	        string description;
+	        address ContractOwner;
+	        uint balance;
+	    }
+
+	  
+  
+    constructor(uint _quota) public payable{
+        ContractOwner = msg.sender;
+        value = msg.value;
+        balance = msg.value;
+        quota = _quota;
+        payout = msg.value/_quota;
+        emit ContractCreated(msg.sender, msg.value);
+         } 
+	       
+    }
+
+/* OLD CODE
+pragma solidity >=0.4.22 <0.7.0;
+
 contract TaskCreate {
     uint public value;
     uint public payout;
@@ -120,3 +169,4 @@ contract TaskCreate {
         Creator.transfer(3 * value);
     }
 }
+*/
