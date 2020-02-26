@@ -4,11 +4,10 @@ contract TaskCreateTest {
 	    
   address owner;
   uint public value;
-  uint public balance;
   uint public quota;
   uint public payout;
   address payable public ContractOwner;
-  address payable public worker;
+  
   
   uint public conntractStartTime;
   uint public contractEndTime;
@@ -37,10 +36,11 @@ contract TaskCreateTest {
 	 mapping(address => uint) public workerWallet; 
 	   
 	 function completeWork() public payable {
-	     require(contractBalance[ContractOwner]> payout);
+	     require(contractBalance[ContractOwner]> payout, 'Insufficient Contract Funds');
 	     workerWallet[msg.sender]+= payout;
 	     contractBalance[ContractOwner] -= payout;
-}
+	     emit workDone(msg.sender, contractBalance[ContractOwner]);
+        }
 }
 
 /* OLD CODE
