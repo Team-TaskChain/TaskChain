@@ -7,6 +7,8 @@ contract TaskCreateTest {
   uint public quota;
   uint public payout;
   address payable public ContractOwner;
+  address payable public workerPerson;
+  uint accountBal;
   
   
   uint public conntractStartTime;
@@ -29,6 +31,8 @@ contract TaskCreateTest {
         contractBalance[msg.sender] = msg.value;
         quota = _quota;
         payout = msg.value/_quota;
+        ended = false;
+        require(quota <= value && quota!=0 && value!=0, "Invalid Starting Conditions");
         emit ContractCreated(msg.sender, msg.value);
          }
     
@@ -37,10 +41,30 @@ contract TaskCreateTest {
 	   
 	 function completeWork() public payable {
 	     require(contractBalance[ContractOwner]> payout, 'Insufficient Contract Funds');
+	     require(ended!=true, "contract is not open");
+	     require(msg.sender != ContractOwner, "you can't work on your own stuff");
 	     workerWallet[msg.sender]+= payout;
 	     contractBalance[ContractOwner] -= payout;
 	     emit workDone(msg.sender, contractBalance[ContractOwner]);
         }
+        
+    function workCashOut() public payable {
+       accountBal= workerWallet[msg.sender];
+       workerWallet[msg.sender]-= accountBal;
+       msg.sender.transfer(accountBal);
+    }
+    
+    function closeContract() public payable {
+        require(msg.sender==ContractOwner, "only the owner can close the contract");
+        accountBal= contractBalance[msg.sender];
+        contractBalance[msg.sender]-=accountBal;
+        ended = true;
+        msg.sender.transfer(accountBal);
+    }
+    
+    function checkContractBal() view public returns (uint) {
+        return contractBalance[ContractOwner];
+    }
 }
 
 /* OLD CODE
