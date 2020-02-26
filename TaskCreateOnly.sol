@@ -1,7 +1,5 @@
-pragma solidity >=0.4.22 <0.7.0;
+pragma solidity >0.4.23 <0.7.0;
 
-
-// NEW CODE	 
 contract TaskCreateTest {
 	    
   address owner;
@@ -24,27 +22,26 @@ contract TaskCreateTest {
   event ContractClosed(address Creator, uint payout);
   event workDone(address Worker, uint balanceContract);
   
-    struct TaskContract {
-	        uint quota;
-	        uint payout;
-            uint value;
-	        string description;
-	        address ContractOwner;
-	        uint balance;
-	    }
-
-	  
+  mapping(address => uint) public contractBalance;
   
     constructor(uint _quota) public payable{
         ContractOwner = msg.sender;
         value = msg.value;
-        balance = msg.value;
+        contractBalance[msg.sender] = msg.value;
         quota = _quota;
         payout = msg.value/_quota;
         emit ContractCreated(msg.sender, msg.value);
-         } 
-	       
-    }
+         }
+    
+	 
+	 mapping(address => uint) public workerWallet; 
+	   
+	 function completeWork() public payable {
+	     require(contractBalance[ContractOwner]> payout);
+	     workerWallet[msg.sender]+= payout;
+	     contractBalance[ContractOwner] -= payout;
+}
+}
 
 /* OLD CODE
 pragma solidity >=0.4.22 <0.7.0;
