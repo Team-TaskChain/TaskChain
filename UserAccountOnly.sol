@@ -1,7 +1,7 @@
 pragma solidity >=0.4.22 <0.7.0;
 
 contract MappedStructsWithIndex {
-    enum UserType {Creator, Worker, Abitrator}
+    enum UserType {Creator, Worker}
     enum UserTier {TierOne, TierTwo, TierThree}
     enum AccountStatus {good, restricted}
     uint256 public tasksCompleted;
@@ -14,6 +14,8 @@ contract MappedStructsWithIndex {
         UserType userType;
         uint256 tasksCompleted;
         AccountStatus accountStatus;
+        bool isArbitrator;
+        
     }
 
     struct EntityStruct {
@@ -24,7 +26,7 @@ contract MappedStructsWithIndex {
     mapping(address => UserAccount) public userStructs;
     address[] public userLists;
 
-    function isUser(address userAddress) public view returns (string userName) {
+    function isUser(address userAddress) public view returns (string memory userName) {
         return userStructs[userAddress].userName;
     }
 
@@ -32,12 +34,39 @@ contract MappedStructsWithIndex {
         return userLists.length;
     }
 
-    function newUser(string userName) public returns (uint256 rowNumber) {
-        require(!userStructs[msg.sender].isOpen);
+    function newUser(string memory userName, UserType _UserType) public returns (uint256 rowNumber) {
+        require (userStructs[msg.sender].isOpen == false);
         userStructs[msg.sender].userName = userName;
-        userStructs[msg.sender].isOpen = false;
+        userStructs[msg.sender].isOpen = true;
+        userStructs[msg.sender].userType = _UserType;
+        userStructs[msg.sender].isArbitrator == false;
         return userLists.push(msg.sender) - 1;
+    
     }
+    
+   function updateUserTier() public returns(bool success) {
+       if (userStructs[msg.sender].tasksCompleted > 50 ) {
+           userStructs[msg.sender].userTier =  UserTier.TierThree;
+       }
+       else if (userStructs[msg.sender].tasksCompleted > 10 && userStructs[msg.sender].tasksCompleted<50) {
+           userStructs[msg.sender].userTier = UserTier.TierTwo;
+       }
+       else {
+            userStructs[msg.sender].userTier = UserTier.TierOne;
+       }
+      return true;
+        }
+   
+   function appointArbitrator() public {
+       require (userStructs[msg.sender].userTier == UserTier.TierThree, 'You must be a TierThree user to arbitrate');
+       userStructs[msg.sender].isArbitrator = true;
+   }
+   
+   function updateUserComlete(uint _tasksCompleted) public {
+       userStructs[msg.sender].tasksCompleted += _tasksCompleted;
+   }
+   
+   
 
     /*
   function newEntity(address entityAddress, uint entityData) public returns(uint rowNumber) {
