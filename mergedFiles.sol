@@ -1,17 +1,22 @@
 pragma solidity >=0.4.22 <0.7.0;
 
 contract MappedStructsWithIndex {
-    enum UserType {Creator, Worker, Arbitrator, Admin}
-    enum UserTier {TierOne, TierTwo, TierThree}
-    enum AccountStatus {good, restricted}
-    uint256 public tasksCompleted;
-    address public RootAdmin;
     
+    //defines userType: Creators add tasks, Workers complete tasks, Arbitrators resolve disputes, Admins perform administrative and punitive functions
+    enum UserType {Creator, Worker, Arbitrator, Admin}
+    //defines userTiers, with TierOne being a new user, and TierThree being the highest, veteran users
+    enum UserTier {TierOne, TierTwo, TierThree}
+    // enables account restricitons and punitive measures
+    enum AccountStatus {good, restricted}
+    //defines the master RootAdmin, who can create new admins
+    address public RootAdmin;
+
+    //defines the rootadmin as the creator of the contract
     constructor() public {
         RootAdmin = msg.sender;
     }
     
-    
+    //modifiers to restrict access to functions
     modifier onlyRootAdmin (){
     require(msg.sender == RootAdmin, "Only Rootadmins may perform this function");
             _;
@@ -34,6 +39,7 @@ contract MappedStructsWithIndex {
     event NewUserRegistered (address userAddress);
     event UserTierUpgrade (UserTier);
 
+    //the base structure for all user accouts. isUsed is to restrict users to one account per address, which helps presever status and rank
     struct UserAccount {
         bool isUsed;
         string userName;
@@ -42,25 +48,27 @@ contract MappedStructsWithIndex {
         uint256 tasksCompleted;
         AccountStatus accountStatus;
     }
-
-
+    
+    //stores the address for all useraccounts
     mapping(address => UserAccount) public userStructs;
     address[] public userLists;
     
-    
+    //retrieves user info
     function getUser(address n) public view returns(bool, string memory, UserTier, UserType, uint256, AccountStatus){
         return(userStructs[n].isUsed, userStructs[n].userName, userStructs[n].userTier, userStructs[n].userType, userStructs[n].tasksCompleted, userStructs[n].accountStatus);
     }
     
-    
+    //retrieves only username
     function isUser(address userAddress) public view returns (string memory userName) {
         return userStructs[userAddress].userName;
     }
-
+    
+    //retrieves the current amount of users
     function getUserCount() public view returns (uint256 userCount) {
         return userLists.length;
     }
-
+    
+    //creates a new user
     function newUser(string memory userName) public returns (uint256 rowNumber) {
         require(userStructs[msg.sender].isUsed != true);
         userStructs[msg.sender].userName = userName;
@@ -68,6 +76,7 @@ contract MappedStructsWithIndex {
         return userLists.push(msg.sender) - 1;
     }
     
+    //enables the uprage of tiers, depending on how many tasks have been completed
    function updateUserTier() public returns(bool success) {
        if (userStructs[msg.sender].tasksCompleted > 50 ) {
            userStructs[msg.sender].userTier =  UserTier.TierThree;
@@ -81,30 +90,35 @@ contract MappedStructsWithIndex {
       return true;
         }
    
+   //appoints a new arbitrator, must be tier three to perform this function
    function appointArbitrator() public goodStatus returns(bool success) {
        require (userStructs[msg.sender].userTier == UserTier.TierThree, 'You must be a TierThree user to arbitrate');
        userStructs[msg.sender].userType = UserType.Arbitrator;
        return true;
    }
    
+   //internal function to test functionality, will be removed before realease
    function updateUserComplete(uint _tasksCompleted) public {
        userStructs[msg.sender].tasksCompleted += _tasksCompleted;
    }
    
+   //apoints new admin
    function createAdmin(address _address) public onlyRootAdmin {
        userStructs[_address].userType = UserType.Admin;
    }
-       
+   
+   //removes admin, to prevent malicious users    
     function demoteAdmin(address _address, uint _Index) public onlyRootAdmin {
         userStructs[_address].userType = UserType(_Index);
     }
    
-   
+   //enables the restriction of accounts, for malicious use
    function restrictAccount(address _address) public {
        require (userStructs[msg.sender].userType == UserType.Admin, "Only Admins may perform this function");
        userStructs[_address].accountStatus = AccountStatus.restricted;
    }
-   
+
+    //restores accounts, based on admin discretion. Timeouts will be added later, for automatic use by user
    function restoreAccount(address _address) public {
        require (userStructs[msg.sender].userType == UserType.Admin, "Only Admins may perform this function");
        userStructs[_address].accountStatus = AccountStatus.restricted;
@@ -116,33 +130,24 @@ contract MappedStructsWithIndex {
 contract TaskCreateTest is MappedStructsWithIndex {
 	    
 	    
-  address owner;
-  uint public value;
-  uint public quota;
-  uint public payout;
-  address payable public ContractOwner;
-  address payable public workerPerson;
-  uint accountBal;
   
   
+  //stores variables for contract in and out
   uint public conntractStartTime;
   uint public contractEndTime;
   
   
-  mapping(address => uint) workPayed;
   
-  bool ended;
- 
-
   event ContractCreated(address Creator, uint value);
   event ContractClosed(address Creator, uint payout);
   event workDone(address Worker, uint balanceContract);
   
+  // defines what tier the contract is. This will correlate to the minimum tier of user required to do work
   enum ContractTier {cTierOne, cTierTwo, cTierThree}
   
-  
+// based structure for contracts, with quota being the number of times the work will be completed, value being the embedded escrow for the contract, and payout being automatic depeding on value/quota
   struct newContract {
-      address Owner;
+      address ContractOwner;
       uint256 value;
       uint256 quota;
       uint256 payout;
@@ -150,49 +155,97 @@ contract TaskCreateTest is MappedStructsWithIndex {
       bool activeContract;
   }
 
+//stores all contract info. Each address can only have one open contract at the moment
   mapping(address => newContract) contractStruct;
   address[] public contractLists;
+  //stores the balance for the contract, seperate from the creators wallet
   mapping(address => uint) public contractBalance;
+  
+  //internal function to add a new takscompletion after work is done
+  function addTaskComplete() internal {
+    userStructs[msg.sender].tasksCompleted+= 1;
+  }
 
+//creates a new contract
 function createContract(uint _taskTier, uint256 _quota, uint256 amount) public payable {
-    contractStruct[msg.sender].Owner = msg.sender;
+    contractStruct[msg.sender].ContractOwner = msg.sender;
     contractStruct[msg.sender].value = amount;
     contractStruct[msg.sender].quota = _quota;
     contractStruct[msg.sender].contractTier = ContractTier(_taskTier);
     contractBalance[msg.sender] += amount;
     contractStruct[msg.sender].activeContract = true;
+    contractStruct[msg.sender].payout = amount/_quota;
     require(msg.value == amount);
 }
   
+  event callArbitration(address indexed _from, address indexed _to, bool _passFail);
   
-  
+    //mapping for the worker wallet to store funds
+   mapping(address => uint) public workerEscrow;
    mapping(address => uint) public workerWallet; 
-	   
-	 function completeWork() public payable {
-	     require(contractBalance[ContractOwner]> payout, 'Insufficient Contract Funds');
-	     require(ended!=true, "contract is not open");
-	     require(msg.sender != ContractOwner, "you can't work on your own stuff");
-	     workerWallet[msg.sender]+= payout;
-	     contractBalance[ContractOwner] -= payout;
-	     emit workDone(msg.sender, contractBalance[ContractOwner]);
+   mapping(address => bool) public workerPass;
+   mapping(address => bool) public requiresArbitration;
+   mapping(address => uint) public arbitrationWallet;
+   
+    //enables the completion of work: TODO add arbitration requirement	   
+	 function completeWork(address _add) public payable {
+	     require(contractBalance[_add] > contractStruct[_add].payout, 'Insufficient Contract Funds');
+	     require(contractStruct[_add].activeContract!=false, "contract is not open");
+	     require(msg.sender != contractStruct[_add].ContractOwner, "you can't work on your own stuff");
+	     workerEscrow[msg.sender]+= contractStruct[_add].payout;
+	     contractBalance[_add] -= contractStruct[_add].payout;
+	     addTaskComplete();
+	     workerPass[msg.sender] = false;
+	     emit workDone(msg.sender, contractBalance[_add]);
         }
         
+    function reviewWork(bool _passFail, address _add) public {
+        if (_passFail==true){
+            workerPass[_add]=true;
+        } else {
+            
+        emit callArbitration(msg.sender, _add, _passFail);    
+        }
+    }
+    
+    
+    //working HERE
+    function arbitrateWork(bool _passFail, address _add) public payable {
+        if (_passFail==true){
+            workerPass[_add]=true;
+            
+        }
+    }
+        
+    function transferEscrow() public payable{
+        require(workerPass[msg.sender]!= false, 'Your work must be reviewed');
+        uint256 actBal;
+        actBal = workerEscrow[msg.sender];
+        workerEscrow[msg.sender]-= actBal;
+        workerWallet[msg.sender]+= actBal;
+        
+    }
+    //cashes out worker wallet to worker: TODO add arbitration restrictions
     function workCashOut() public payable {
+       uint256 accountBal;
        accountBal= workerWallet[msg.sender];
        workerWallet[msg.sender]-= accountBal;
        msg.sender.transfer(accountBal);
     }
     
+    // closes the contract, and empties wallet back to creator
     function closeContract() public payable {
-        require(msg.sender==ContractOwner, "only the owner can close the contract");
+        require(msg.sender==contractStruct[msg.sender].ContractOwner, "only the owner can close the contract");
+        uint256 accountBal;
         accountBal= contractBalance[msg.sender];
         contractBalance[msg.sender]-=accountBal;
-        ended = true;
+        contractStruct[msg.sender].activeContract = false;
         msg.sender.transfer(accountBal);
     }
-    
+
+    //checks current balance for the contract wallet
     function checkContractBal() view public returns (uint) {
-        return contractBalance[ContractOwner];
+        return contractBalance[msg.sender];
     }
 }
 
