@@ -145,13 +145,15 @@ contract TaskCreateTest is MappedStructsWithIndex {
   // defines what tier the contract is. This will correlate to the minimum tier of user required to do work
   enum ContractTier {cTierOne, cTierTwo, cTierThree}
   
+ 
+  
 // based structure for contracts, with quota being the number of times the work will be completed, value being the embedded escrow for the contract, and payout being automatic depeding on value/quota
   struct newContract {
       address ContractOwner;
       uint256 value;
       uint256 quota;
       uint256 payout;
-      ContractTier contractTier;
+      UserTier userTier;
       bool activeContract;
   }
 
@@ -161,20 +163,24 @@ contract TaskCreateTest is MappedStructsWithIndex {
   //stores the balance for the contract, seperate from the creators wallet
   mapping(address => uint) public contractBalance;
   
+  
   //internal function to add a new takscompletion after work is done
   function addTaskComplete() internal {
     userStructs[msg.sender].tasksCompleted+= 1;
   }
 
 //creates a new contract
-function createContract(uint _taskTier, uint256 _quota, uint256 amount) public payable {
+function createContract(uint _taskTier, uint256 _quota, uint amount) public payable {
+    uint amountEscrow = amount*5 /100;
+    uint contractAmount = amount * 95/100;
     contractStruct[msg.sender].ContractOwner = msg.sender;
-    contractStruct[msg.sender].value = amount;
+    contractStruct[msg.sender].value = contractAmount;
     contractStruct[msg.sender].quota = _quota;
-    contractStruct[msg.sender].contractTier = ContractTier(_taskTier);
-    contractBalance[msg.sender] += amount;
+    contractStruct[msg.sender].userTier = UserTier(_taskTier);
+    reserveWallet[RootAdmin]+=amountEscrow;
+    contractBalance[msg.sender] += contractAmount;
     contractStruct[msg.sender].activeContract = true;
-    contractStruct[msg.sender].payout = amount/_quota;
+    contractStruct[msg.sender].payout = contractAmount/_quota;
     require(msg.value == amount);
 }
   
@@ -186,12 +192,14 @@ function createContract(uint _taskTier, uint256 _quota, uint256 amount) public p
    mapping(address => bool) public workerPass;
    mapping(address => bool) public requiresArbitration;
    mapping(address => uint) public arbitrationWallet;
+   mapping(address => uint) public reserveWallet;
    
     //enables the completion of work: TODO add arbitration requirement	   
 	 function completeWork(address _add) public payable {
 	     require(contractBalance[_add] > contractStruct[_add].payout, 'Insufficient Contract Funds');
 	     require(contractStruct[_add].activeContract!=false, "contract is not open");
 	     require(msg.sender != contractStruct[_add].ContractOwner, "you can't work on your own stuff");
+	     require(userStructs[msg.sender].userTier==contractStruct[_add].userTier, "You Have Insufficient Rank");
 	     workerEscrow[msg.sender]+= contractStruct[_add].payout;
 	     contractBalance[_add] -= contractStruct[_add].payout;
 	     addTaskComplete();
@@ -200,6 +208,7 @@ function createContract(uint _taskTier, uint256 _quota, uint256 amount) public p
         }
         
     function reviewWork(bool _passFail, address _add) public {
+        require(workerPass[_add]==false, "The worker must not have passed to arbitrate");
         if (_passFail==true){
             workerPass[_add]=true;
         } else {
@@ -210,10 +219,21 @@ function createContract(uint _taskTier, uint256 _quota, uint256 amount) public p
     
     
     //working HERE
-    function arbitrateWork(bool _passFail, address _add) public payable {
+    function arbitrateWork(bool _passFail, address _workerAdd, address _contractAdd ) public payable {
+        require(workerPass[_workerAdd]==false, "The worker must not have passed to arbitrate");
         if (_passFail==true){
-            workerPass[_add]=true;
-            
+            workerPass[_workerAdd]=true;
+            reserveWallet[RootAdmin]-=contractStruct[_contractAdd].payout;
+            contractBalance[_contractAdd]-=2*contractStruct[_contractAdd].payout;
+            workerEscrow[msg.sender]+=contractStruct[_contractAdd].payout;
+            arbitrationWallet[msg.sender]+=2*contractStruct[_contractAdd].payout;
+            }
+        if (_passFail==false) {
+            workerPass[_workerAdd]=false;
+            reserveWallet[RootAdmin]-= 2 * contractStruct[_contractAdd].payout;
+            workerEscrow[_workerAdd]-=contractStruct[_contractAdd].payout;
+            arbitrationWallet[msg.sender]+=2*contractStruct[_contractAdd].payout;
+            contractBalance[_contractAdd]+= contractStruct[_contractAdd].payout;
         }
     }
         
@@ -233,6 +253,12 @@ function createContract(uint _taskTier, uint256 _quota, uint256 amount) public p
        msg.sender.transfer(accountBal);
     }
     
+    function arbitratorCashOut() public payable {
+        uint256 accountBal;
+        accountBal = arbitrationWallet[msg.sender];
+        arbitrationWallet[msg.sender]-=accountBal;
+        msg.sender.transfer(accountBal);
+    }
     // closes the contract, and empties wallet back to creator
     function closeContract() public payable {
         require(msg.sender==contractStruct[msg.sender].ContractOwner, "only the owner can close the contract");
