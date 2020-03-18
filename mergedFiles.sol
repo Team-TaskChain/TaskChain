@@ -1,6 +1,6 @@
 pragma solidity >=0.4.22 <0.7.0;
 
-contract MappedStructsWithIndex {
+contract UserIndex {
     
     //defines userType: Creators add tasks, Workers complete tasks, Arbitrators resolve disputes, Admins perform administrative and punitive functions
     enum UserType {Creator, Worker, Arbitrator, Admin}
@@ -21,6 +21,11 @@ contract MappedStructsWithIndex {
     require(msg.sender == RootAdmin, "Only Rootadmins may perform this function");
             _;
     }
+    
+    modifier onlyWorkers(){
+        require(userStructs[msg.sender].userType == UserType.Worker);
+        _;
+    }
     modifier onlyCreators(){
         require(userStructs[msg.sender].userType == UserType.Creator, "Only Creators may create");
         _;
@@ -36,6 +41,11 @@ contract MappedStructsWithIndex {
         _;
     }
     
+    modifier onlyAdmin() {
+        require(userStructs[msg.sender].isAdmin==true, "You must be an admin to use this feature");
+        _;
+    }
+    
     event NewUserRegistered (address userAddress);
     event UserTierUpgrade (UserTier);
 
@@ -47,6 +57,7 @@ contract MappedStructsWithIndex {
         UserType userType;
         uint256 tasksCompleted;
         AccountStatus accountStatus;
+        bool isAdmin;
     }
     
     //stores the address for all useraccounts
@@ -69,10 +80,13 @@ contract MappedStructsWithIndex {
     }
     
     //creates a new user
-    function newUser(string memory userName) public returns (uint256 rowNumber) {
+    function newUser(string memory userName, uint _index) public returns (uint256 rowNumber) {
         require(userStructs[msg.sender].isUsed != true);
+        require(_index==0 || _index==1);
+        userStructs[msg.sender].userType = UserType(_index);
         userStructs[msg.sender].userName = userName;
         userStructs[msg.sender].isUsed = true;
+        userStructs[msg.sender].isAdmin = false;
         return userLists.push(msg.sender) - 1;
     }
     
@@ -104,30 +118,28 @@ contract MappedStructsWithIndex {
    
    //apoints new admin
    function createAdmin(address _address) public onlyRootAdmin {
-       userStructs[_address].userType = UserType.Admin;
+       userStructs[_address].isAdmin = true;
    }
    
    //removes admin, to prevent malicious users    
-    function demoteAdmin(address _address, uint _Index) public onlyRootAdmin {
-        userStructs[_address].userType = UserType(_Index);
+    function demoteAdmin(address _address) public onlyRootAdmin {
+        userStructs[_address].isAdmin = false;
     }
    
    //enables the restriction of accounts, for malicious use
-   function restrictAccount(address _address) public {
-       require (userStructs[msg.sender].userType == UserType.Admin, "Only Admins may perform this function");
-       userStructs[_address].accountStatus = AccountStatus.restricted;
+   function restrictAccount(address _address) onlyAdmin public {
+         userStructs[_address].accountStatus = AccountStatus.restricted;
    }
 
     //restores accounts, based on admin discretion. Timeouts will be added later, for automatic use by user
-   function restoreAccount(address _address) public {
-       require (userStructs[msg.sender].userType == UserType.Admin, "Only Admins may perform this function");
+   function restoreAccount(address _address) onlyAdmin public {
        userStructs[_address].accountStatus = AccountStatus.restricted;
        
    }
    
 }
 
-contract TaskCreateTest is MappedStructsWithIndex {
+contract TaskCreate is UserIndex {
 	    
 	    
   
@@ -195,7 +207,7 @@ function createContract(uint _taskTier, uint256 _quota, uint amount) public paya
    mapping(address => uint) public reserveWallet;
    
     //enables the completion of work: TODO add arbitration requirement	   
-	 function completeWork(address _add) public payable {
+	 function completeWork(address _add) public onlyWorkers payable {
 	     require(contractBalance[_add] > contractStruct[_add].payout, 'Insufficient Contract Funds');
 	     require(contractStruct[_add].activeContract!=false, "contract is not open");
 	     require(msg.sender != contractStruct[_add].ContractOwner, "you can't work on your own stuff");
@@ -207,8 +219,9 @@ function createContract(uint _taskTier, uint256 _quota, uint amount) public paya
 	     emit workDone(msg.sender, contractBalance[_add]);
         }
         
-    function reviewWork(bool _passFail, address _add) public {
+    function reviewWork(bool _passFail, address _add) onlyCreators public {
         require(workerPass[_add]==false, "The worker must not have passed to arbitrate");
+        require(contractStruct[_add].ContractOwner==msg.sender);
         if (_passFail==true){
             workerPass[_add]=true;
         } else {
@@ -219,7 +232,7 @@ function createContract(uint _taskTier, uint256 _quota, uint amount) public paya
     
     
     //working HERE
-    function arbitrateWork(bool _passFail, address _workerAdd, address _contractAdd ) public payable {
+    function arbitrateWork(bool _passFail, address _workerAdd, address _contractAdd ) onlyArbitrator public payable {
         require(workerPass[_workerAdd]==false, "The worker must not have passed to arbitrate");
         if (_passFail==true){
             workerPass[_workerAdd]=true;
@@ -237,7 +250,7 @@ function createContract(uint _taskTier, uint256 _quota, uint amount) public paya
         }
     }
         
-    function transferEscrow() public payable{
+    function transferEscrow() public onlyWorkers payable{
         require(workerPass[msg.sender]!= false, 'Your work must be reviewed');
         uint256 actBal;
         actBal = workerEscrow[msg.sender];
@@ -246,21 +259,21 @@ function createContract(uint _taskTier, uint256 _quota, uint amount) public paya
         
     }
     //cashes out worker wallet to worker: TODO add arbitration restrictions
-    function workCashOut() public payable {
+    function workCashOut() onlyWorkers public payable {
        uint256 accountBal;
        accountBal= workerWallet[msg.sender];
        workerWallet[msg.sender]-= accountBal;
        msg.sender.transfer(accountBal);
     }
     
-    function arbitratorCashOut() public payable {
+    function arbitratorCashOut() public onlyArbitrator payable {
         uint256 accountBal;
         accountBal = arbitrationWallet[msg.sender];
         arbitrationWallet[msg.sender]-=accountBal;
         msg.sender.transfer(accountBal);
     }
     // closes the contract, and empties wallet back to creator
-    function closeContract() public payable {
+    function closeContract() onlyCreators public payable {
         require(msg.sender==contractStruct[msg.sender].ContractOwner, "only the owner can close the contract");
         uint256 accountBal;
         accountBal= contractBalance[msg.sender];
@@ -274,4 +287,3 @@ function createContract(uint _taskTier, uint256 _quota, uint amount) public paya
         return contractBalance[msg.sender];
     }
 }
-
