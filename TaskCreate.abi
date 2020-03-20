@@ -1,0 +1,674 @@
+[
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "_address",
+                "type": "address"
+            }
+        ],
+        "name": "createAdmin",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "_passFail",
+                "type": "bool"
+            },
+            {
+                "name": "_add",
+                "type": "address"
+            }
+        ],
+        "name": "reviewWork",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [],
+        "name": "arbitratorCashOut",
+        "outputs": [],
+        "payable": true,
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "_add",
+                "type": "address"
+            }
+        ],
+        "name": "completeWork",
+        "outputs": [],
+        "payable": true,
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "userStructs",
+        "outputs": [
+            {
+                "name": "isUsed",
+                "type": "bool"
+            },
+            {
+                "name": "userName",
+                "type": "string"
+            },
+            {
+                "name": "userTier",
+                "type": "uint8"
+            },
+            {
+                "name": "userType",
+                "type": "uint8"
+            },
+            {
+                "name": "tasksCompleted",
+                "type": "uint256"
+            },
+            {
+                "name": "accountStatus",
+                "type": "uint8"
+            },
+            {
+                "name": "isAdmin",
+                "type": "bool"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "checkContractBal",
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "userLists",
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "workerWallet",
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "RootAdmin",
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "userAddress",
+                "type": "address"
+            }
+        ],
+        "name": "isUser",
+        "outputs": [
+            {
+                "name": "userName",
+                "type": "string"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "_address",
+                "type": "address"
+            }
+        ],
+        "name": "restrictAccount",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [],
+        "name": "closeContract",
+        "outputs": [],
+        "payable": true,
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "n",
+                "type": "address"
+            }
+        ],
+        "name": "getUser",
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool"
+            },
+            {
+                "name": "",
+                "type": "string"
+            },
+            {
+                "name": "",
+                "type": "uint8"
+            },
+            {
+                "name": "",
+                "type": "uint8"
+            },
+            {
+                "name": "",
+                "type": "uint256"
+            },
+            {
+                "name": "",
+                "type": "uint8"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "userName",
+                "type": "string"
+            },
+            {
+                "name": "_index",
+                "type": "uint256"
+            }
+        ],
+        "name": "newUser",
+        "outputs": [
+            {
+                "name": "rowNumber",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "_tasksCompleted",
+                "type": "uint256"
+            }
+        ],
+        "name": "updateUserComplete",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [],
+        "name": "workCashOut",
+        "outputs": [],
+        "payable": true,
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [],
+        "name": "updateUserTier",
+        "outputs": [
+            {
+                "name": "success",
+                "type": "bool"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "conntractStartTime",
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "_passFail",
+                "type": "bool"
+            },
+            {
+                "name": "_workerAdd",
+                "type": "address"
+            },
+            {
+                "name": "_contractAdd",
+                "type": "address"
+            }
+        ],
+        "name": "arbitrateWork",
+        "outputs": [],
+        "payable": true,
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "workerPass",
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "requiresArbitration",
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "contractLists",
+        "outputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "workerEscrow",
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getUserCount",
+        "outputs": [
+            {
+                "name": "userCount",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "contractEndTime",
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "_taskTier",
+                "type": "uint256"
+            },
+            {
+                "name": "_quota",
+                "type": "uint256"
+            },
+            {
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "createContract",
+        "outputs": [],
+        "payable": true,
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "contractBalance",
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "reserveWallet",
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "_address",
+                "type": "address"
+            }
+        ],
+        "name": "demoteAdmin",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [],
+        "name": "appointArbitrator",
+        "outputs": [
+            {
+                "name": "success",
+                "type": "bool"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [],
+        "name": "transferEscrow",
+        "outputs": [],
+        "payable": true,
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "arbitrationWallet",
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "_address",
+                "type": "address"
+            }
+        ],
+        "name": "restoreAccount",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "name": "Creator",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "name": "value",
+                "type": "uint256"
+            }
+        ],
+        "name": "ContractCreated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "name": "Creator",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "name": "payout",
+                "type": "uint256"
+            }
+        ],
+        "name": "ContractClosed",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "name": "Worker",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "name": "balanceContract",
+                "type": "uint256"
+            }
+        ],
+        "name": "workDone",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "name": "_from",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "name": "_to",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "name": "_passFail",
+                "type": "bool"
+            }
+        ],
+        "name": "callArbitration",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "name": "userAddress",
+                "type": "address"
+            }
+        ],
+        "name": "NewUserRegistered",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "name": "",
+                "type": "uint8"
+            }
+        ],
+        "name": "UserTierUpgrade",
+        "type": "event"
+    }
+]
