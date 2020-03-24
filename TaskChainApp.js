@@ -52,22 +52,21 @@ TaskCreate.prototype.createNewUser = function() {
 
     // Transfer amount to other address
     // Use the public mint function from the smart contract
-    this.instance.newUser(userName, userType, { from: window.web3.eth.accounts[0], gas: 100000, gasPrice: 100000, gasLimit: 100000 }, 
+    this.instance.newUser(userName, userType, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 }, 
         // If there's an error, log it
         function(error, txHash) {
             if(error) {
-                console.log(error);
+                console.log("error1", error);
             }
             // If success then wait for confirmation of transaction
             // with utility function and clear form values while waiting
             else {
                 that.waitForReceipt(txHash, function(receipt) {
                     if(receipt.status) {
-                        $("#userName").val("");
-                        $("#userType").val("");
+                        $("#userName").val("");                        
                     }
                     else {
-                        console.log("error");
+                        console.log("error in user");
                     }
                 });
             }
@@ -82,22 +81,54 @@ TaskCreate.prototype.waitForReceipt = function(hash, cb) {
     // Checks for transaction receipt using web3 library method
     this.web3.eth.getTransactionReceipt(hash, function(err, receipt) {
         if (err) {
+            console.log("Transaciton Receipt Error");
             error(err);
         }
         if (receipt !== null) {
             // Transaction went through
             if (cb) {
+                console.log("reciept1");
                 cb(receipt);
+                console.log("reciept2");
+
             }
         } else {
             // Try again in 2 second
+            console.log("reciept2");
             window.setTimeout(function() {
                 that.waitForReceipt(hash, cb);
             }, 2000);
         }
     });
 }
+TaskCreate.prototype.isUser = function(hash, cb) {
+    var that = this;
 
+    // Get input values, the address to check balance of
+    var userAddress = $("#userCheckAddress").val();
+    console.log(userAddress);
+
+  
+    
+
+    // Check the balance from the address passed and output the value 
+    this.getBalance(userAddress, function(error, userStruct) {
+        if(error) {
+            console.log("UserCreate Erorr", error)
+        }
+        else {
+            console.log(userStruct);  
+                          
+        }
+    })
+}
+
+
+TaskCreate.prototype.getBalance = function(userAddress, cb) {
+    this.instance.userStructs(userAddress, function(error, result) {
+        cb(error, result);
+    })
+}
 // Check if it has the basic requirements of an address
 function isValidAddress(address) {
     return /^(0x)?[0-9a-f]{40}$/i.test(address);
@@ -115,6 +146,12 @@ TaskCreate.prototype.bindButtons = function() {
     $(document).on("click", "#createUser", function() {
         console.log('usertryClick')
         that.createNewUser();
+        console.log('UserClick')
+    });
+
+    $(document).on("click", "#getUserCountBtn", function() {
+        console.log('usertryClick')
+        that.isUser();
         console.log('UserClick')
     });
   
