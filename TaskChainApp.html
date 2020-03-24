@@ -1,289 +1,181 @@
-pragma solidity >=0.4.22 <0.7.0;
+<!DOCTYPE html>
+<html lang="en">    
 
-contract UserIndex {
-    
-    //defines userType: Creators add tasks, Workers complete tasks, Arbitrators resolve disputes, Admins perform administrative and punitive functions
-    enum UserType {Creator, Worker, Arbitrator, Admin}
-    //defines userTiers, with TierOne being a new user, and TierThree being the highest, veteran users
-    enum UserTier {TierOne, TierTwo, TierThree}
-    // enables account restricitons and punitive measures
-    enum AccountStatus {good, restricted}
-    //defines the master RootAdmin, who can create new admins
-    address public RootAdmin;
 
-    //defines the rootadmin as the creator of the contract
-    constructor() public {
-        RootAdmin = msg.sender;
-    }
-    
-    //modifiers to restrict access to functions
-    modifier onlyRootAdmin (){
-    require(msg.sender == RootAdmin, "Only Rootadmins may perform this function");
-            _;
-    }
-    
-    modifier onlyWorkers(){
-        require(userStructs[msg.sender].userType == UserType.Worker);
-        _;
-    }
-    modifier onlyCreators(){
-        require(userStructs[msg.sender].userType == UserType.Creator, "Only Creators may create");
-        _;
-    }
-    
-    modifier onlyArbitrator(){
-        require(userStructs[msg.sender].userType == UserType.Arbitrator, "Only Arbitrators may perform this function");
-        _;
-    }
-    
-    modifier goodStatus() {
-        require(userStructs[msg.sender].accountStatus == AccountStatus.good, "Your account is not in good standing");
-        _;
-    }
-    
-    modifier onlyAdmin() {
-        require(userStructs[msg.sender].isAdmin==true, "You must be an admin to use this feature");
-        _;
-    }
-    
-    event NewUserRegistered (address userAddress);
-    event UserTierUpgrade (UserTier);
+<head>
+    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+    <script type="text/javascript" src="https://unpkg.com/jquery@3.3.1/dist/jquery.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/web3@0.20.5/dist/web3.min.js"></script>
+    <!-- The generated javascript and app.js will be substituted in below -->
+    <!-- JAVASCRIPT -->
 
-    //the base structure for all user accouts. isUsed is to restrict users to one account per address, which helps presever status and rank
-    struct UserAccount {
-        bool isUsed;
-        string userName;
-        UserTier userTier;
-        UserType userType;
-        uint256 tasksCompleted;
-        AccountStatus accountStatus;
-        bool isAdmin;
-    }
+    <!-- The app.css contents will be substituted in below -->
+    <!-- STYLE -->
     
-    //stores the address for all useraccounts
-    mapping(address => UserAccount) public userStructs;
-    address[] public userLists;
-    
-    //retrieves user info
-    function getUser(address n) public view returns(bool, string memory, UserTier, UserType, uint256, AccountStatus){
-        return(userStructs[n].isUsed, userStructs[n].userName, userStructs[n].userTier, userStructs[n].userType, userStructs[n].tasksCompleted, userStructs[n].accountStatus);
-    }
-    
-    //retrieves only username
-    function isUser(address userAddress) public view returns (string memory userName) {
-        return userStructs[userAddress].userName;
-    }
-    
-    //retrieves the current amount of users
-    function getUserCount() public view returns (uint256 userCount) {
-        return userLists.length;
-    }
-    
-    //creates a new user
-    function newUser(string memory userName, uint _index) public returns (uint256 rowNumber) {
-        require(userStructs[msg.sender].isUsed != true);
-        require(_index==0 || _index==1);
-        userStructs[msg.sender].userType = UserType(_index);
-        userStructs[msg.sender].userName = userName;
-        userStructs[msg.sender].isUsed = true;
-        userStructs[msg.sender].isAdmin = false;
-        return userLists.push(msg.sender) - 1;
-    }
-    
-    //enables the uprage of tiers, depending on how many tasks have been completed
-   function updateUserTier() public returns(bool success) {
-       if (userStructs[msg.sender].tasksCompleted > 50 ) {
-           userStructs[msg.sender].userTier =  UserTier.TierThree;
-       }
-       else if (userStructs[msg.sender].tasksCompleted > 10 && userStructs[msg.sender].tasksCompleted<50) {
-           userStructs[msg.sender].userTier = UserTier.TierTwo;
-       }
-       else {
-            userStructs[msg.sender].userTier = UserTier.TierOne;
-       }
-      return true;
-        }
-   
-   //appoints a new arbitrator, must be tier three to perform this function
-   function appointArbitrator() public goodStatus returns(bool success) {
-       require (userStructs[msg.sender].userTier == UserTier.TierThree, 'You must be a TierThree user to arbitrate');
-       userStructs[msg.sender].userType = UserType.Arbitrator;
-       return true;
-   }
-   
-   //internal function to test functionality, will be removed before realease
-   function updateUserComplete(uint _tasksCompleted) public {
-       userStructs[msg.sender].tasksCompleted += _tasksCompleted;
-   }
-   
-   //apoints new admin
-   function createAdmin(address _address) public onlyRootAdmin {
-       userStructs[_address].isAdmin = true;
-   }
-   
-   //removes admin, to prevent malicious users    
-    function demoteAdmin(address _address) public onlyRootAdmin {
-        userStructs[_address].isAdmin = false;
-    }
-   
-   //enables the restriction of accounts, for malicious use
-   function restrictAccount(address _address) onlyAdmin public {
-         userStructs[_address].accountStatus = AccountStatus.restricted;
-   }
+    <style>
+        body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
+        </style>
+    <body class="w3-light-grey">
+    <nav class="w3-sidebar w3-indigo w3-collapse w3-top w3-large w3-padding" style="z-index:3;width:300px;font-weight:bold;" id="mySidebar"><br>
+  <a href="javascript:void(0)" onclick="w3_close()" class="w3-button w3-hide-large w3-display-topleft" style="width:100%;font-size:22px">Close Menu</a>
+  <div class="w3-container">
+    <h3 class="w3-padding-64"><b>TaskChain<br>Functions</b></h3>
+  </div>
+  
+  <!-- Top menu on small screens -->
+<header class="w3-container w3-top w3-hide-large w3-red w3-xlarge w3-padding">
+  <a href="javascript:void(0)" class="w3-button w3-red w3-margin-right" onclick="w3_open()">☰</a>
+  <span>TaskChain Functions Menu</span>
+</header>
+  <div class="w3-bar-block">
+    <a href="#" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Home</a> 
+    <a href="#newUserInputTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">New User</a> 
+    <a href="#upgradeTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Upgrade User</a> 
+    <a href="#arbitratorTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Create Arbitrator</a> 
+    <a href="#createAdminTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Appoint Admin</a> 
+    <a href="#adminControlTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Admin Access Control</a>
+	<a href="#createContractTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Create Contract</a>
+	<a href="#performWorkTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Perform Work</a>
+	<a href="#reviewWorkTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Review Work</a>
+	<a href="#arbitrateWorkTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Arbitrate Work</a>
+	<a href="#transferEscrowTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Transfer Escrow</a>
+	<a href="#cashOutWorkerTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Cash Out (Worker)</a>
+	<a href="#cashOutArbitratorTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Cash Out (Arbitrator)</a>
+	<a href="#checkContractBalTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Check Contract Balance</a>
+	<a href="#closeContractTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Close Contract</a>
+	
+  </div>
+</nav>
+	<div class="w3-main" style="margin-left:340px;margin-right:40px">
 
-    //restores accounts, based on admin discretion. Timeouts will be added later, for automatic use by user
-   function restoreAccount(address _address) onlyAdmin public {
-       userStructs[_address].accountStatus = AccountStatus.restricted;
-       
-   }
-   
-}
+    <h1>Welcome to TaskChain </h1><br>
+    <div class="message"></div>
+    <h2><b>New User and Adminstrative Section</b></h2>
+	 <hr style="width:50px;border:5px solid red" class="w3-round">
 
-contract TaskCreate is UserIndex {
-	    
-	    
-  
-  
-  //stores variables for contract in and out
-  uint public conntractStartTime;
-  uint public contractEndTime;
-  
-  
-  
-  event ContractCreated(address Creator, uint value);
-  event ContractClosed(address Creator, uint payout);
-  event workDone(address Worker, uint balanceContract);
-  
-  // defines what tier the contract is. This will correlate to the minimum tier of user required to do work
-  enum ContractTier {cTierOne, cTierTwo, cTierThree}
-  
- 
-  
-// based structure for contracts, with quota being the number of times the work will be completed, value being the embedded escrow for the contract, and payout being automatic depeding on value/quota
-  struct newContract {
-      address ContractOwner;
-      uint256 value;
-      uint256 quota;
-      uint256 payout;
-      UserTier userTier;
-      bool activeContract;
-  }
+    <div class="w3-content">
+        <div></div>
+        <h3 id="newUserInputTag">Please Input UserName and Type</h3>
+        <label for="userName">userName</label><br>
+        <input type="text" id="userName" placeholder="User Name"><br>
+        <form id="userType">
+            <select>
+                <option value=0>Worker</option>
+                <option value=1>Creator</option>
+            </select>
+        </form>
+        <button class="btn" id="createUser">Create User</button>
+    </div><br><br>
+    <div class="w3-content">
+        <h3 id="upgradeTag">Upgrade User to New Tier</h3>
+        <button class="btn" id="updateUserTier">Upgrade User</button>
+    </div><br><br>
+    <div class="w3-content">
+        <h3 id="arbitratorTag">Create Arbitrator</h3>
+        <button class="btn" id="appointArbitrator">Request Arbitrator Status</button>
+    </div><br><br>
+    <div class="w3-content">
+        <h3 id="createAdminTag">Appoint Admin</h3>
+        <label for="adminAddress">Admin Address:</label>
+        <input type="text" id="adminAddress" placeholder="address"><br>
+        <button class="btn" id="createAdmin">Upgrade to Admin</button>
+        <button class="btn" id="demoteAdmin">Demote Admin</button>
+    </div><br><br>
+    <div class="w3-content">
+        <h3 id="adminControlTag">Admin Access Control</h3>
+        <label for="restrictAccountAddress">Address to be Changed:</label>
+        <input type="text" id="restrictAccountAddress" placeholder="address"><br>
+        <button class="btn" id="restrictAccount">Restrict Account</button>
+        <button class="btn" id="restoreAccount">Restore Account</button>
+    </div><br><br>
+    <h2><b>TaskCreate Section</b></h2>
+	<hr style="width:50px;border:5px solid red" class="w3-round">
 
-//stores all contract info. Each address can only have one open contract at the moment
-  mapping(address => newContract) contractStruct;
-  address[] public contractLists;
-  //stores the balance for the contract, seperate from the creators wallet
-  mapping(address => uint) public contractBalance;
-  
-  
-  //internal function to add a new takscompletion after work is done
-  function addTaskComplete() internal {
-    userStructs[msg.sender].tasksCompleted+= 1;
-  }
-
-//creates a new contract
-function createContract(uint _taskTier, uint256 _quota, uint amount) public payable {
-    uint amountEscrow = amount*5 /100;
-    uint contractAmount = amount * 95/100;
-    contractStruct[msg.sender].ContractOwner = msg.sender;
-    contractStruct[msg.sender].value = contractAmount;
-    contractStruct[msg.sender].quota = _quota;
-    contractStruct[msg.sender].userTier = UserTier(_taskTier);
-    reserveWallet[RootAdmin]+=amountEscrow;
-    contractBalance[msg.sender] += contractAmount;
-    contractStruct[msg.sender].activeContract = true;
-    contractStruct[msg.sender].payout = contractAmount/_quota;
-    require(msg.value == amount);
-}
-  
-  event callArbitration(address indexed _from, address indexed _to, bool _passFail);
-  
-    //mapping for the worker wallet to store funds
-   mapping(address => uint) public workerEscrow;
-   mapping(address => uint) public workerWallet; 
-   mapping(address => bool) public workerPass;
-   mapping(address => bool) public requiresArbitration;
-   mapping(address => uint) public arbitrationWallet;
-   mapping(address => uint) public reserveWallet;
-   
-    //enables the completion of work: TODO add arbitration requirement	   
-	 function completeWork(address _add) public onlyWorkers payable {
-	     require(contractBalance[_add] > contractStruct[_add].payout, 'Insufficient Contract Funds');
-	     require(contractStruct[_add].activeContract!=false, "contract is not open");
-	     require(msg.sender != contractStruct[_add].ContractOwner, "you can't work on your own stuff");
-	     require(userStructs[msg.sender].userTier==contractStruct[_add].userTier, "You Have Insufficient Rank");
-	     workerEscrow[msg.sender]+= contractStruct[_add].payout;
-	     contractBalance[_add] -= contractStruct[_add].payout;
-	     addTaskComplete();
-	     workerPass[msg.sender] = false;
-	     emit workDone(msg.sender, contractBalance[_add]);
-        }
-        
-    function reviewWork(bool _passFail, address _add) onlyCreators public {
-        require(workerPass[_add]==false, "The worker must not have passed to arbitrate");
-        require(contractStruct[_add].ContractOwner==msg.sender);
-        if (_passFail==true){
-            workerPass[_add]=true;
-        } else {
-            
-        emit callArbitration(msg.sender, _add, _passFail);    
-        }
-    }
+    <div class="w3-content">
+        <h3 id="createContractTag">Create New Contract</h3>
+        <label for="msgValue">Task Total Value:</label><br>
+        <input type="number" id="msgValue" placeholder="value"><br>
+        <label for="quota">Number of Workers Desired:</label><br>
+        <input type="number" id="quota" placeholder="quota">
+        <form id="taskTier">
+            <select>
+                <option value=0>Tier One</option>
+                <option value=1>Tier Two</option>
+                <option value=2>Tier Three</option>
+            </select>
+        </form>
     
-    
-    //working HERE
-    function arbitrateWork(bool _passFail, address _workerAdd, address _contractAdd ) onlyArbitrator public payable {
-        require(workerPass[_workerAdd]==false, "The worker must not have passed to arbitrate");
-        if (_passFail==true){
-            workerPass[_workerAdd]=true;
-            reserveWallet[RootAdmin]-=contractStruct[_contractAdd].payout;
-            contractBalance[_contractAdd]-=2*contractStruct[_contractAdd].payout;
-            workerEscrow[msg.sender]+=contractStruct[_contractAdd].payout;
-            arbitrationWallet[msg.sender]+=2*contractStruct[_contractAdd].payout;
-            }
-        if (_passFail==false) {
-            workerPass[_workerAdd]=false;
-            reserveWallet[RootAdmin]-= 2 * contractStruct[_contractAdd].payout;
-            workerEscrow[_workerAdd]-=contractStruct[_contractAdd].payout;
-            arbitrationWallet[msg.sender]+=2*contractStruct[_contractAdd].payout;
-            contractBalance[_contractAdd]+= contractStruct[_contractAdd].payout;
-        }
-    }
-        
-    function transferEscrow() public onlyWorkers payable{
-        require(workerPass[msg.sender]!= false, 'Your work must be reviewed');
-        uint256 actBal;
-        actBal = workerEscrow[msg.sender];
-        workerEscrow[msg.sender]-= actBal;
-        workerWallet[msg.sender]+= actBal;
-        
-    }
-    //cashes out worker wallet to worker: TODO add arbitration restrictions
-    function workCashOut() onlyWorkers public payable {
-       uint256 accountBal;
-       accountBal= workerWallet[msg.sender];
-       workerWallet[msg.sender]-= accountBal;
-       msg.sender.transfer(accountBal);
-    }
-    
-    function arbitratorCashOut() public onlyArbitrator payable {
-        uint256 accountBal;
-        accountBal = arbitrationWallet[msg.sender];
-        arbitrationWallet[msg.sender]-=accountBal;
-        msg.sender.transfer(accountBal);
-    }
-    // closes the contract, and empties wallet back to creator
-    function closeContract() onlyCreators public payable {
-        require(msg.sender==contractStruct[msg.sender].ContractOwner, "only the owner can close the contract");
-        uint256 accountBal;
-        accountBal= contractBalance[msg.sender];
-        contractBalance[msg.sender]-=accountBal;
-        contractStruct[msg.sender].activeContract = false;
-        msg.sender.transfer(accountBal);
-    }
+        <button class="btn" id="createContract">Create Contract</button>
+    </div>
+    <div class="w3-content">
+        <br><br>
+        <h3 id="performWorkTag">Perform Work</h3>
+        <label for="completeWorkAddress">Task Address:</label><br>
+        <input type="text" id="completeWorkAddress" placeholder="address"><br>
+        <button class="btn" id="completeWork">Complete Work</button>
+    </div><br><br>
+	<div class="w3-content">
+		<h3 id="reviewWorkTag">Review Work(Creator)</h3>
+		<label for="reviewAddress">Address to Review</label><br>
+        <input type="text" id="reviewAddress" placeholder="address"><br>
+		<form id="reviewPassFail">
+            <select>
+                <option value=true>Pass</option>
+                <option value=false>Fail</option>                
+            </select>
+        </form><br>
+		<button class="btn" id="reviewWork">Complete Review</button>	
+	</div><br><br>
+	<div class="w3-content">
+		<h3 id="arbitrateWorkTag">Arbitrate Work</h3>
+		<label for="contractArbAdd">Contract Address:</label>
+		<input type="text" id="contractArbAdd" placeholder="address"><br>
+		<label for="workerArbAdd">Worker Address:</label>
+		<input type="text" id="workerArbAdd" placeholder="address"><br>
+		<form id="reviewArbPassFail">
+            <select>
+                <option value=true>Pass</option>
+                <option value=false>Fail</option>                
+            </select>
+        </form><br>
+		<button class="btn" id="arbitrateWork">Complete Arbitration</button>	
+	</div><br><br>
+	<div class="w3-content">
+		<h3 id="transferEscrowTag">Transfer from Escrow(Workers)</h3>
+		<button class="btn" id="transferEscrow">Transfer to Account</button>
+	</div><br><br>
+	
+	<div class="w3-content">
+		<h3 id="cashOutWorkerTag">Cash Out (Worker)</h3>
+		<button class="btn" id="workCashOut">Cash out Balance</button>
+	</div><br><br>
+	
+	<div class="w3-content">
+		<h3 id="cashOutArbitratorTag">Cash Out (Arbitrator)</h3>
+		<button class="btn" id="arbitratorCashOut">Cash out Balance</button>
+	</div><br><br>
+	
+	<div class="w3-content">
+		<h3 id="checkContractBalTag">Check Contract Balance(Creator)</h3>
+		<button class="btn" id="checkContractBal">Contract Bal</button>
+	</div><br><br>
+	
+	<div class="w3-content">
+		<h3 id="closeContractTag">Close Contract(Creator)</h3>
+		<button class="btn" id=" closeContract">Close Contract</button>
+	</div><br><br>
+	
+	
 
-    //checks current balance for the contract wallet
-    function checkContractBal() view public returns (uint) {
-        return contractBalance[msg.sender];
-    }
-}
+
+</head>
+
+<body>
+    <h1><span id="message"></span></h1>
+</body>
+
+</html>
