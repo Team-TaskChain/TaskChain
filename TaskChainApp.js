@@ -40,10 +40,13 @@ TaskCreate.prototype.createNewUser = function() {
     var that = this;
 
     // Get input values for address and amount
+
+    //var e = document.getElementById("userType");
+    //var userType = e.options[e.selectedIndex].value;
     var userName = $("#userName").val();
     var userType = $("#userType").val();
-    console.log(userName);
-	console.log(userType);
+    console.log("Username:", userName);
+	console.log("Usertype:", userType);
 
     
 
