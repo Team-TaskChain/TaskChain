@@ -60,9 +60,11 @@ TaskCreate.prototype.createNewUser = function () {
                 that.waitForReceipt(txHash, function (receipt) {
                     if (receipt.status) {
                         $("#userName").val("");
+                        showStatus("User", userName, "created!")
                     }
                     else {
                         console.log("error in user");
+                        showStatus("error in user create")
                     }
                 });
             }
@@ -88,9 +90,11 @@ TaskCreate.prototype.upgradeUser = function (hash, cb) {
                 that.waitForReceipt(txHash, function (receipt) {
                     if (receipt !== null) {
                         console.log("success");
+                        showStatus("Transaction Completed!")
                     }
                     else {
-                        console.log("reciept error");
+                        console.log("receipt error");
+                        showStatus("Error in Transaciton")
 
                     }
                 });
@@ -111,15 +115,18 @@ TaskCreate.prototype.createArb = function (hash, cb) {
         function (error, txHash) {
             if (error) {
                 console.log(error);
+                showStatus(error);
             }
             else {
 
                 that.waitForReceipt(txHash, function (receipt) {
                     if (receipt !== null) {
                         console.log("success");
+                        showStatus("Transaction Completed")
                     }
                     else {
-                        console.log("reciept error");
+                        console.log("receipt error");
+                        showStatus("Transaction Failure")
 
                     }
                 });
@@ -143,14 +150,14 @@ TaskCreate.prototype.waitForReceipt = function (hash, cb) {
         if (receipt !== null) {
             // Transaction went through
             if (cb) {
-                console.log("reciept1");
+                console.log("receipt1");
                 cb(receipt);
-                console.log("reciept2");
+                console.log("receipt2");
 
             }
         } else {
             // Try again in 2 second
-            console.log("reciept2");
+            console.log("receipt2");
             window.setTimeout(function () {
                 that.waitForReceipt(hash, cb);
             }, 2000);
@@ -222,7 +229,7 @@ TaskCreate.prototype.appAdmin = function () {
                         console.log("success");
                     }
                     else {
-                        console.log("reciept error");
+                        console.log("receipt error");
 
                     }
                 });
@@ -262,7 +269,7 @@ TaskCreate.prototype.demAdmin = function () {
                         console.log("success");
                     }
                     else {
-                        console.log("reciept error");
+                        console.log("receipt error");
 
                     }
                 });
@@ -300,7 +307,7 @@ TaskCreate.prototype.restrictAccount = function () {
                         console.log("success");
                     }
                     else {
-                        console.log("reciept error");
+                        console.log("receipt error");
 
                     }
                 });
@@ -340,7 +347,88 @@ TaskCreate.prototype.restoreAccount = function () {
                         console.log("success");
                     }
                     else {
-                        console.log("reciept error");
+                        console.log("receipt error");
+
+                    }
+                });
+            }
+        }
+    )
+}
+
+TaskCreate.prototype.performWork = function () {
+    var that = this;
+    console.log("this check")
+
+    // Get input values, the address
+    var address = $("#completeWorkAddress").val();
+    if (!isValidAddress(address)) {
+        showStatus("Please enter a valid address");
+        return;
+    }
+    console.log(address);
+
+    // Check the balance from the address 
+    this.instance.performWork(address, { from: window.web3.eth.accounts[0], gas: 100000, gasPrice: 1000000000, gasLimit: 100000 },
+        console.log("error1"),
+        function (error, txHash) {
+            console.log("erorrrr")
+            if (error) {
+                console.log("error2");
+                console.log(error);
+            }
+            else {
+                console.log("elsechain");
+                that.waitForReceipt(txHash, function (receipt) {
+                    console.log("error3");
+                    if (receipt.status == 1) {
+                        console.log("success");
+                        $("#completeWorkAddress").val("");
+
+                    }
+                    else {
+                        console.log("receipt error");
+
+                    }
+                });
+            }
+        }
+    )
+}
+
+TaskCreate.prototype.reviewWork = function () {
+    var that = this;
+    console.log("this check")
+
+    // Get input values, the address
+    var address = $("#reviewAddress").val();
+    var passFail = $("#reviewPassFail").val();
+
+    if (!isValidAddress(address)) {
+        showStatus("Please enter a valid address");
+        return;
+    }
+    console.log(address);
+
+    // Check the balance from the address 
+    this.instance.reviewWork(address, passFail, { from: window.web3.eth.accounts[0], gas: 100000, gasPrice: 1000000000, gasLimit: 100000 },
+        console.log("error1"),
+        function (error, txHash) {
+            console.log("erorrrr")
+            if (error) {
+                console.log("error2");
+                console.log(error);
+            }
+            else {
+                console.log("elsechain");
+                that.waitForReceipt(txHash, function (receipt) {
+                    console.log("error3");
+                    if (receipt.status == 1) {
+                        console.log("success");
+                        $("#reviewAddress").val("");
+                    }
+                    else {
+                        console.log("receipt error");
 
                     }
                 });
@@ -350,7 +438,199 @@ TaskCreate.prototype.restoreAccount = function () {
 }
 
 
+TaskCreate.prototype.arbitrateWork = function () {
+    var that = this;
+    console.log("this check")
 
+    // Get input values, the address
+    var address = $("#contractArbAdd").val();
+    var workerAddress = $("#workerArbAdd").val();
+    var passFail = $("#arbitrateWork").val();
+
+    if (!isValidAddress(address)) {
+        showStatus("Please enter a valid address");
+        return;
+    }
+    if (!isValidAddress(workerAddress)) {
+        showStatus("Please enter a valid address");
+        return;
+    }
+    console.log(address);
+
+    // Check the balance from the address 
+    this.instance.arbitrateWork(address, workerAddress, passFail, { from: window.web3.eth.accounts[0], gas: 100000, gasPrice: 1000000000, gasLimit: 100000 },
+        console.log("error1"),
+        function (error, txHash) {
+            console.log("erorrrr")
+            if (error) {
+                console.log("error2");
+                console.log(error);
+            }
+            else {
+                console.log("elsechain");
+                that.waitForReceipt(txHash, function (receipt) {
+                    console.log("error3");
+                    if (receipt.status == 1) {
+                        console.log("success");
+                        $("#contractArbAdd").val("");
+                        $("#workerArbAdd").val("");
+                    }
+                    else {
+                        console.log("receipt error");
+
+                    }
+                });
+            }
+        }
+    )
+}
+
+//upgrades user to new user tier
+TaskCreate.prototype.transferEscrow = function (hash, cb) {
+    var that = this;
+    console.log("this check")
+
+    //address of caller
+    var address = window.web3.eth.accounts[0];
+
+    //upgrades user tier
+    this.instance.transferEscrow({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
+        function (error, txHash) {
+            if (error) {
+                console.log(error);
+            }
+            else {
+                that.waitForReceipt(txHash, function (receipt) {
+                    if (receipt !== null) {
+                        console.log("success");
+                        showStatus("Transaction Completed!")
+                    }
+                    else {
+                        console.log("receipt error");
+                        showStatus("Error in Transaciton")
+
+                    }
+                });
+            }
+        }
+    )
+}
+
+//upgrades user to new user tier
+TaskCreate.prototype.workCashOut = function (hash, cb) {
+    var that = this;
+    console.log("this check")
+
+    //address of caller
+    var address = window.web3.eth.accounts[0];
+
+    //upgrades user tier
+    this.instance.workCashOut({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
+        function (error, txHash) {
+            if (error) {
+                console.log(error);
+            }
+            else {
+                that.waitForReceipt(txHash, function (receipt) {
+                    if (receipt !== null) {
+                        console.log("success");
+                        showStatus("Transaction Completed!")
+                    }
+                    else {
+                        console.log("receipt error");
+                        showStatus("Error in Transaciton")
+
+                    }
+                });
+            }
+        }
+    )
+}
+
+//upgrades user to new user tier
+TaskCreate.prototype.arbitratorCashOut = function (hash, cb) {
+    var that = this;
+    console.log("this check")
+
+    //address of caller
+    var address = window.web3.eth.accounts[0];
+
+    //upgrades user tier
+    this.instance.arbitratorCashOut({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
+        function (error, txHash) {
+            if (error) {
+                console.log(error);
+            }
+            else {
+                that.waitForReceipt(txHash, function (receipt) {
+                    if (receipt !== null) {
+                        console.log("success");
+                        showStatus("Transaction Completed!")
+                    }
+                    else {
+                        console.log("receipt error");
+                        showStatus("Error in Transaciton")
+
+                    }
+                });
+            }
+        }
+    )
+}
+
+//upgrades user to new user tier
+TaskCreate.prototype.checkContractBal = function (hash, cb) {
+    var that = this;
+    console.log("this check")
+
+    //address of caller
+    var address = window.web3.eth.accounts[0];
+
+    //upgrades user tier
+    this.instance.checkContractBal({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
+        function (error, balance) {
+            if (error) {
+                console.log(error);
+            }
+            else {
+                console.log(balance.toNumber());
+                $("#contractBalanceMessage").text(balance.toNumber());
+            }
+        })
+}
+
+//upgrades user to new user tier
+TaskCreate.prototype.closeContract = function (hash, cb) {
+    var that = this;
+    console.log("this check")
+
+    //address of caller
+    var address = window.web3.eth.accounts[0];
+
+    //upgrades user tier
+    this.instance.closeContract({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
+        function (error, txHash) {
+            if (error) {
+                console.log(error);
+            }
+            else {
+                that.waitForReceipt(txHash, function (receipt) {
+                    if (receipt !== null) {
+                        console.log("success");
+
+
+                        showStatus("Transaction Completed!")
+                    }
+                    else {
+                        console.log("receipt error");
+                        showStatus("Error in Transaciton")
+
+                    }
+                });
+            }
+        }
+    )
+}
 
 // Check if it has the basic requirements of an address
 function isValidAddress(address) {
@@ -411,6 +691,48 @@ TaskCreate.prototype.bindButtons = function () {
     $(document).on("click", "#restoreAccount", function () {
         console.log('usertryClickAdmin')
         that.restoreAccount();
+        console.log('UserClick')
+    });
+
+    $(document).on("click", "#completeWork", function () {
+        console.log('usertryClickAdmin')
+        that.performWork();
+        console.log('UserClick')
+    });
+
+    $(document).on("click", "#reviewWork", function () {
+        console.log('usertryClickAdmin')
+        that.performWork();
+        console.log('UserClick')
+    });
+
+    $(document).on("click", "#transferEscrow", function () {
+        console.log('usertryClickAdmin')
+        that.transferEscrow();
+        console.log('UserClick')
+    });
+
+    $(document).on("click", "#workCashOut", function () {
+        console.log('usertryClickAdmin')
+        that.workCashOut();
+        console.log('UserClick')
+    });
+
+    $(document).on("click", "#arbitratorCashOut", function () {
+        console.log('usertryClickAdmin')
+        that.arbitratorCashOut();
+        console.log('UserClick')
+    });
+
+    $(document).on("click", "#closeContract", function () {
+        console.log('usertryClickAdmin')
+        that.closeContract();
+        console.log('UserClick')
+    });
+
+    $(document).on("click", "#checkContractBal", function () {
+        console.log('usertryClickAdmin')
+        that.checkContractBal();
         console.log('UserClick')
     });
 
