@@ -150,8 +150,8 @@
             <h3 id="reviewWorkTag">Review Work(Creator)</h3>
             <label for="reviewAddress">Address to Review</label><br>
             <input type="text" id="reviewAddress" placeholder="address"><br>
-            <form id="reviewPassFail">
-                <select>
+            <form>
+                <select id="reviewPassFail">
                     <option value=true>Pass</option>
                     <option value=false>Fail</option>
                 </select>
@@ -166,8 +166,8 @@
             <input type="text" id="workerArbAdd" placeholder="address"><br>
             <form id="reviewArbPassFail">
                 <select>
-                    <option value=true>Pass</option>
-                    <option value=false>Fail</option>
+                    <option value=0>Pass</option>
+                    <option value=1>Fail</option>
                 </select>
             </form><br>
             <button class="btn" id="arbitrateWork">Complete Arbitration</button>
