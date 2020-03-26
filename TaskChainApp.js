@@ -60,7 +60,7 @@ TaskCreate.prototype.createNewUser = function () {
                 that.waitForReceipt(txHash, function (receipt) {
                     if (receipt.status) {
                         $("#userName").val("");
-                        showStatus("User", userName, "created!")
+                        showStatus("User " + userName + " created!")
                     }
                     else {
                         console.log("error in user");
@@ -356,7 +356,49 @@ TaskCreate.prototype.restoreAccount = function () {
     )
 }
 
-TaskCreate.prototype.performWork = function () {
+TaskCreate.prototype.createContract = function () {
+    var that = this;
+    console.log("this check")
+
+    // Get input values, the address
+    var value = $("#msgValue").val();
+    var quota = $("#quota").val();
+    var tasktier = $("#taskTier").val();
+    console.log("value: ", value);
+    console.log("quota: ", quota);
+    console.log("tasktier: ", tasktier)
+
+    // Check the balance from the address 
+    this.instance.createContract(tasktier, quota, value, send, { from: window.web3.eth.accounts[0], gas: 10000000, gasPrice: 1000000000, gasLimit: 100000 },
+        console.log("error1"),
+        function (error, txHash) {
+            console.log("erorrrr")
+            console.log(error);
+            if (error) {
+                console.log("error2");
+                console.log(error);
+            }
+            else {
+                console.log("elsechain");
+                that.waitForReceipt(txHash, function (receipt) {
+                    console.log("error3");
+                    if (receipt.status == 1) {
+                        console.log("success");
+                        $("#completeWorkAddress").val("");
+
+                    }
+                    else {
+                        console.log("receipt error");
+
+                    }
+                });
+            }
+        }
+    )
+}
+
+
+TaskCreate.prototype.completeWork = function () {
     var that = this;
     console.log("this check")
 
@@ -369,7 +411,7 @@ TaskCreate.prototype.performWork = function () {
     console.log(address);
 
     // Check the balance from the address 
-    this.instance.performWork(address, { from: window.web3.eth.accounts[0], gas: 100000, gasPrice: 1000000000, gasLimit: 100000 },
+    this.instance.completeWork(address, { from: window.web3.eth.accounts[0], gas: 100000, gasPrice: 1000000000, gasLimit: 100000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -694,15 +736,21 @@ TaskCreate.prototype.bindButtons = function () {
         console.log('UserClick')
     });
 
+    $(document).on("click", "#createContract", function () {
+        console.log('usertryClickAdmin')
+        that.createContract();
+        console.log('UserClick')
+    });
+
     $(document).on("click", "#completeWork", function () {
         console.log('usertryClickAdmin')
-        that.performWork();
+        that.completeWork();
         console.log('UserClick')
     });
 
     $(document).on("click", "#reviewWork", function () {
         console.log('usertryClickAdmin')
-        that.performWork();
+        that.reviewWork();
         console.log('UserClick')
     });
 
