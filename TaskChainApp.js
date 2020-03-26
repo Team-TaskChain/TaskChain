@@ -1,812 +1,211 @@
-// The object 'Contracts' will be injected here, which contains all data for all contracts, keyed on contract name:
-// Contracts['HelloWorld'] = {
-//  abi: [],
-//  address: "0x..",
-//  endpoint: "http://...."
-// }
+<!DOCTYPE html>
+<html lang="en">
 
-// Create an instance of the smart contract, passing it as a property, 
-// which allows web3js to interact with it.
-function TaskCreate(Contract) {
-    this.web3 = null;
-    this.instance = null;
-    this.Contract = Contract;
-    console.log("LOAD Success");
-}
+<head>
+    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+    <script type="text/javascript" src="https://unpkg.com/jquery@3.3.1/dist/jquery.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/web3@0.20.5/dist/web3.min.js"></script>
+    <!-- The generated javascript and app.js will be substituted in below -->
+    <!-- JAVASCRIPT -->
 
-// Initialize the `Coin` object and create an instance of the web3js library, 
-TaskCreate.prototype.init = function () {
-    // The initialization function defines the interface for the contract using 
-    // the web3js contract object and then defines the address of the instance 
-    // of the contract for the `Coin` object.
+    <!-- The app.css contents will be substituted in below -->
+    <!-- STYLE -->
 
-    // Create a new Web3 instance using either the Metamask provider
-    // or an independent provider created as the endpoint configured for the contract.
-    this.web3 = new Web3(
-        (window.web3 && window.web3.currentProvider) ||
-        new Web3.providers.HttpProvider(this.Contract.endpoint));
-
-    // Create the contract interface using the ABI provided in the configuration.
-    var contract_interface = this.web3.eth.contract(this.Contract.abi);
-
-    // Create the contract instance for the specific address provided in the configuration.
-    this.instance = contract_interface.at(this.Contract.address);
-};
-
-
-
-//create new User
-TaskCreate.prototype.createNewUser = function () {
-    var that = this;
-
-    // Get input values for userName and userType
-    var userName = $("#userName").val();
-    var userType = $("#userType").val();
-    console.log("Username:", userName);
-    console.log("Usertype:", userType);
-
-
-
-    //calls new User function, adds to blockchain
-    this.instance.newUser(userName, userType, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
-        // If there's an error, log it
-        function (error, txHash) {
-            if (error) {
-                console.log("error1", error);
-            }
-            // If success then wait for confirmation of transaction
-            // with utility function and clear form values while waiting
-            else {
-                that.waitForReceipt(txHash, function (receipt) {
-                    if (receipt.status) {
-                        $("#userName").val("");
-                        showStatus("User " + userName + " created!")
-                    }
-                    else {
-                        console.log("error in user");
-                        showStatus("error in user create")
-                    }
-                });
-            }
+    <style>
+        body,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            font-family: "Raleway", sans-serif
         }
-    )
-}
-
-//upgrades user to new user tier
-TaskCreate.prototype.upgradeUser = function (hash, cb) {
-    var that = this;
-    console.log("this check")
-
-    //address of caller
-    var address = window.web3.eth.accounts[0];
-
-    //upgrades user tier
-    this.instance.updateUserTier({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
-        function (error, txHash) {
-            if (error) {
-                console.log(error);
-            }
-            else {
-                that.waitForReceipt(txHash, function (receipt) {
-                    if (receipt !== null) {
-                        console.log("success");
-                        showStatus("Transaction Completed!")
-                    }
-                    else {
-                        console.log("receipt error");
-                        showStatus("Error in Transaciton")
-
-                    }
-                });
-            }
-        }
-    )
-}
-
-//creates a new arbitrator class to user calling function
-TaskCreate.prototype.createArb = function (hash, cb) {
-    var that = this;
-    console.log("this check")
-
-    //records address of account calling
-    var address = window.web3.eth.accounts[0];
-
-    this.instance.appointArbitrator({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
-        function (error, txHash) {
-            if (error) {
-                console.log(error);
-                showStatus(error);
-            }
-            else {
-
-                that.waitForReceipt(txHash, function (receipt) {
-                    if (receipt !== null) {
-                        console.log("success");
-                        showStatus("Transaction Completed")
-                    }
-                    else {
-                        console.log("receipt error");
-                        showStatus("Transaction Failure")
-
-                    }
-                });
-            }
-        }
-    )
-}
-
-
-
-// Waits for receipt of transaction
-TaskCreate.prototype.waitForReceipt = function (hash, cb) {
-    var that = this;
-
-    // Checks for transaction receipt using web3 library method
-    this.web3.eth.getTransactionReceipt(hash, function (err, receipt) {
-        if (err) {
-            console.log("Transaciton Receipt Error");
-            error(err);
-        }
-        if (receipt !== null) {
-            // Transaction went through
-            if (cb) {
-                console.log("receipt1");
-                cb(receipt);
-                console.log("receipt2");
-
-            }
-        } else {
-            // Try again in 2 second
-            console.log("receipt2");
-            window.setTimeout(function () {
-                that.waitForReceipt(hash, cb);
-            }, 2000);
-        }
-    });
-}
-
-
-//calls user structure
-TaskCreate.prototype.isUser = function (hash, cb) {
-    var that = this;
-
-    // Get input values
-    var userAddress = $("#userCheckAddress").val();
-    if (!isValidAddress(userAddress)) {
-        showStatus("Please enter a valid address");
-        return;
-    }
-
-    console.log(userAddress);
-
-    // passes user address, calls struct back
-    this.getUser(userAddress, function (error, userStruct) {
-        if (error) {
-            console.log("UserCreate Erorr", error)
-        }
-        else {
-            console.log(userStruct);
-
-        }
-    })
-}
-
-//calls user
-TaskCreate.prototype.getUser = function (userAddress, cb) {
-    this.instance.userStructs(userAddress, function (error, result) {
-        cb(error, result);
-    })
-}
-
-// creates new admin user, only called by rootadmin
-TaskCreate.prototype.appAdmin = function () {
-    var that = this;
-    console.log("this check")
-
-    // Get input values, the address
-    var address = $("#adminAddress").val();
-    console.log(address);
-    if (!isValidAddress(address)) {
-        showStatus("Please enter a valid address");
-        return;
-    }
-
-
-    //appoints admin
-    this.instance.createAdmin(address, { from: window.web3.eth.accounts[0], gas: 100000, gasPrice: 1000000000, gasLimit: 100000 },
-        console.log("error1"),
-        function (error, txHash) {
-            console.log("erorrrr")
-            if (error) {
-                console.log("error2");
-                console.log(error);
-            }
-            else {
-                console.log("elsechain");
-                that.waitForReceipt(txHash, function (receipt) {
-                    console.log("error3");
-                    if (receipt.status == 1) {
-                        console.log("success");
-                    }
-                    else {
-                        console.log("receipt error");
-
-                    }
-                });
-            }
-        }
-    )
-}
-
-//demotes admin
-TaskCreate.prototype.demAdmin = function () {
-    var that = this;
-    console.log("this check")
-
-    // Get input values, the address
-    var address = $("#adminAddress").val();
-    if (!isValidAddress(address)) {
-        showStatus("Please enter a valid address");
-        return;
-    }
-    console.log(address);
-
-
-    // gets address, msg.sender, and demotes
-    this.instance.createAdmin(address, { from: window.web3.eth.accounts[0], gas: 100000, gasPrice: 1000000000, gasLimit: 100000 },
-        console.log("error1"),
-        function (error, txHash) {
-            console.log("erorrrr")
-            if (error) {
-                console.log("error2");
-                console.log(error);
-            }
-            else {
-                console.log("elsechain");
-                that.waitForReceipt(txHash, function (receipt) {
-                    console.log("error3");
-                    if (receipt.status == 1) {
-                        console.log("success");
-                    }
-                    else {
-                        console.log("receipt error");
-
-                    }
-                });
-            }
-        }
-    )
-}
-
-//restricts accounts, called by admins
-TaskCreate.prototype.restrictAccount = function () {
-    var that = this;
-    console.log("this check")
-
-    // Get input values, the address
-    var address = $("#restrictAccountAddress").val();
-    console.log(address);
-    if (!isValidAddress(address)) {
-        showStatus("Please enter a valid address");
-        return;
-    }
-
-    this.instance.restrictAccount(address, { from: window.web3.eth.accounts[0], gas: 100000, gasPrice: 1000000000, gasLimit: 100000 },
-        console.log("error1"),
-        function (error, txHash) {
-            console.log("erorrrr")
-            if (error) {
-                console.log("error2");
-                console.log(error);
-            }
-            else {
-                console.log("elsechain");
-                that.waitForReceipt(txHash, function (receipt) {
-                    console.log("error3");
-                    if (receipt.status == 1) {
-                        console.log("success");
-                    }
-                    else {
-                        console.log("receipt error");
-
-                    }
-                });
-            }
-        }
-    )
-}
-
-//restores resctricted account
-TaskCreate.prototype.restoreAccount = function () {
-    var that = this;
-    console.log("this check")
-
-    // Get input values, the address
-    var address = $("#restrictAccountAddress").val();
-    if (!isValidAddress(address)) {
-        showStatus("Please enter a valid address");
-        return;
-    }
-    console.log(address);
-
-
-    // Check the balance from the address 
-    this.instance.restoreAccount(address, { from: window.web3.eth.accounts[0], gas: 100000, gasPrice: 1000000000, gasLimit: 100000 },
-        console.log("error1"),
-        function (error, txHash) {
-            console.log("erorrrr")
-            if (error) {
-                console.log("error2");
-                console.log(error);
-            }
-            else {
-                console.log("elsechain");
-                that.waitForReceipt(txHash, function (receipt) {
-                    console.log("error3");
-                    if (receipt.status == 1) {
-                        console.log("success");
-                    }
-                    else {
-                        console.log("receipt error");
-
-                    }
-                });
-            }
-        }
-    )
-}
-
-TaskCreate.prototype.createContract = function () {
-    var that = this;
-    console.log("this check")
-
-    // Get input values, the address
-    var value = $("#msgValue").val();
-    var quota = $("#quota").val();
-    var tasktier = $("#taskTier").val();
-    console.log("value: ", value);
-    console.log("quota: ", quota);
-    console.log("tasktier: ", tasktier)
-
-    // Check the balance from the address 
-    this.instance.createContract(tasktier, quota, value, { from: window.web3.eth.accounts[0], value: value, gas: 10000000, gasPrice: 1000000000, gasLimit: 100000 },
-        console.log("error1"),
-        function (error, txHash) {
-            console.log("erorrrr")
-            console.log(error);
-            if (error) {
-                console.log("error2");
-                console.log(error);
-            }
-            else {
-                console.log("elsechain");
-                that.waitForReceipt(txHash, function (receipt) {
-                    console.log("error3");
-                    if (receipt.status == 1) {
-                        console.log("success");
-                        $("#completeWorkAddress").val("");
-
-                    }
-                    else {
-                        console.log("receipt error");
-
-                    }
-                });
-            }
-        }
-    )
-}
-
-
-TaskCreate.prototype.completeWork = function () {
-    var that = this;
-    console.log("this check")
-
-    // Get input values, the address
-    var address = $("#completeWorkAddress").val();
-    var newAddress = { from: window.web3.eth.accounts[0]};
-    console.log("sender addrewss", newAddress);
-    if (!isValidAddress(address)) {
-        showStatus("Please enter a valid address");
-        return;
-    }
-    console.log(address);
-
-    // Check the balance from the address 
-    this.instance.completeWork(address, { from: window.web3.eth.accounts[0], gas: 1000000000, gasPrice: 1000000000, gasLimit: 100000 },
-        console.log("error1"),
-        function (error, txHash) {
-            console.log("erorrrr")
-            if (error) {
-                console.log("error2");
-                console.log(error);
-            }
-            else {
-                console.log("elsechain");
-                that.waitForReceipt(txHash, function (receipt) {
-                    console.log("error3");
-                    if (receipt.status == 1) {
-                        console.log("success");
-                        $("#completeWorkAddress").val("");
-
-                    }
-                    else {
-                        console.log("receipt error");
-
-                    }
-                });
-            }
-        }
-    )
-}
-
-TaskCreate.prototype.reviewWork = function () {
-    var that = this;
-    console.log("this check")
-
-    // Get input values, the address
-    var address = $("#reviewAddress").val();
-    var passFailVal = $("#reviewPassFail").val();
-    console.log("boolValue", passFailVal);
-
-    
-    console.log("address", address);
-    
-
-    if (!isValidAddress(address)) {
-        showStatus("Please enter a valid address");
-        return;
-    }
-    console.log(address);
-
-    // Check the balance from the address 
-    this.instance.reviewWork(passFailVal, address,{ from: window.web3.eth.accounts[0], gas: 1000000000, gasPrice: 1000000000, gasLimit: 100000000 },
-        console.log("error1"),
-        function (error, txHash) {
-            console.log("erorrrr")
-            if (error) {
-                console.log("error2");
-                console.log(error);
-            }
-            else {
-                console.log("elsechain");
-                that.waitForReceipt(txHash, function (receipt) {
-                    console.log("error3");
-                    if (receipt.status == 1) {
-                        console.log("success");
-                        $("#reviewAddress").val("");
-                    }
-                    else {
-                        console.log("receipt error");
-                        console.log(receipt);
-
-                    }
-                });
-            }
-        }
-    )
-}
-
-
-TaskCreate.prototype.arbitrateWork = function () {
-    var that = this;
-    console.log("this check")
-
-    // Get input values, the address
-    var address = $("#contractArbAdd").val();
-    var workerAddress = $("#workerArbAdd").val();
-    var passFail = $("#arbitrateWork").val();
-
-    if (!isValidAddress(address)) {
-        showStatus("Please enter a valid address");
-        return;
-    }
-    if (!isValidAddress(workerAddress)) {
-        showStatus("Please enter a valid address");
-        return;
-    }
-    console.log(address);
-
-    // Check the balance from the address 
-    this.instance.arbitrateWork(address, workerAddress, passFail, { from: window.web3.eth.accounts[0], gas: 100000, gasPrice: 1000000000, gasLimit: 100000 },
-        console.log("error1"),
-        function (error, txHash) {
-            console.log("erorrrr")
-            if (error) {
-                console.log("error2");
-                console.log(error);
-            }
-            else {
-                console.log("elsechain");
-                that.waitForReceipt(txHash, function (receipt) {
-                    console.log("error3");
-                    if (receipt.status == 1) {
-                        console.log("success");
-                        $("#contractArbAdd").val("");
-                        $("#workerArbAdd").val("");
-                    }
-                    else {
-                        console.log("receipt error");
-
-                    }
-                });
-            }
-        }
-    )
-}
-
-//upgrades user to new user tier
-TaskCreate.prototype.transferEscrow = function (hash, cb) {
-    var that = this;
-    console.log("this check")
-
-    //address of caller
-    var address = window.web3.eth.accounts[0];
-
-    //upgrades user tier
-    this.instance.transferEscrow({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
-        function (error, txHash) {
-            if (error) {
-                console.log(error);
-            }
-            else {
-                that.waitForReceipt(txHash, function (receipt) {
-                    if (receipt !== null) {
-                        console.log("success");
-                        showStatus("Transaction Completed!")
-                    }
-                    else {
-                        console.log("receipt error");
-                        showStatus("Error in Transaciton")
-
-                    }
-                });
-            }
-        }
-    )
-}
-
-//upgrades user to new user tier
-TaskCreate.prototype.workCashOut = function (hash, cb) {
-    var that = this;
-    console.log("this check")
-
-    //address of caller
-    var address = window.web3.eth.accounts[0];
-
-    //upgrades user tier
-    this.instance.workCashOut({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
-        function (error, txHash) {
-            if (error) {
-                console.log(error);
-            }
-            else {
-                that.waitForReceipt(txHash, function (receipt) {
-                    if (receipt !== null) {
-                        console.log("success");
-                        showStatus("Transaction Completed!")
-                    }
-                    else {
-                        console.log("receipt error");
-                        showStatus("Error in Transaciton")
-
-                    }
-                });
-            }
-        }
-    )
-}
-
-//upgrades user to new user tier
-TaskCreate.prototype.arbitratorCashOut = function (hash, cb) {
-    var that = this;
-    console.log("this check")
-
-    //address of caller
-    var address = window.web3.eth.accounts[0];
-
-    //upgrades user tier
-    this.instance.arbitratorCashOut({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
-        function (error, txHash) {
-            if (error) {
-                console.log(error);
-            }
-            else {
-                that.waitForReceipt(txHash, function (receipt) {
-                    if (receipt !== null) {
-                        console.log("success");
-                        showStatus("Transaction Completed!")
-                    }
-                    else {
-                        console.log("receipt error");
-                        showStatus("Error in Transaciton")
-
-                    }
-                });
-            }
-        }
-    )
-}
-
-//upgrades user to new user tier
-TaskCreate.prototype.checkContractBal = function (hash, cb) {
-    var that = this;
-    console.log("this check")
-
-    //address of caller
-    var address = window.web3.eth.accounts[0];
-
-    //upgrades user tier
-    this.instance.checkContractBal({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
-        function (error, balance) {
-            if (error) {
-                console.log(error);
-            }
-            else {
-                console.log(balance.toNumber());
-                $("#contractBalanceMessage").text(balance.toNumber());
-            }
-        })
-}
-
-//upgrades user to new user tier
-TaskCreate.prototype.closeContract = function (hash, cb) {
-    var that = this;
-    console.log("this check")
-
-    //address of caller
-    var address = window.web3.eth.accounts[0];
-
-    //upgrades user tier
-    this.instance.closeContract({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
-        function (error, txHash) {
-            if (error) {
-                console.log(error);
-            }
-            else {
-                that.waitForReceipt(txHash, function (receipt) {
-                    if (receipt !== null) {
-                        console.log("success");
-
-
-                        showStatus("Transaction Completed!")
-                    }
-                    else {
-                        console.log("receipt error");
-                        showStatus("Error in Transaciton")
-
-                    }
-                });
-            }
-        }
-    )
-}
-
-// Check if it has the basic requirements of an address
-function isValidAddress(address) {
-    return /^(0x)?[0-9a-f]{40}$/i.test(address);
-}
-
-// Basic validation of amount. Bigger than 0 and typeof number
-function isValidAmount(amount) {
-    return amount > 0 && typeof Number(amount) == 'number';
-}
-
-// Bind functions to the buttons defined in app.html
-TaskCreate.prototype.bindButtons = function () {
-    var that = this;
-
-    $(document).on("click", "#createUser", function () {
-        console.log('usertryClick')
-        that.createNewUser();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#getUserCountBtn", function () {
-        console.log('usertryClick')
-        that.isUser();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#updateUserTier", function () {
-        console.log('usertryClick')
-        that.upgradeUser();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#appointArbitrator", function () {
-        console.log('usertryClick')
-        that.createArb();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#createAdmin", function () {
-        console.log('usertryClickAdmin')
-        that.appAdmin();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#demoteAdmin", function () {
-        console.log('usertryClickAdmin')
-        that.demAdmin();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#restrictAccount", function () {
-        console.log('usertryClickAdmin')
-        that.restrictAccount();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#restoreAccount", function () {
-        console.log('usertryClickAdmin')
-        that.restoreAccount();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#createContract", function () {
-        console.log('usertryClickAdmin')
-        that.createContract();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#completeWork", function () {
-        console.log('usertryClickAdmin')
-        that.completeWork();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#reviewWork", function () {
-        console.log('usertryClickAdmin')
-        that.reviewWork();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#transferEscrow", function () {
-        console.log('usertryClickAdmin')
-        that.transferEscrow();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#workCashOut", function () {
-        console.log('usertryClickAdmin')
-        that.workCashOut();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#arbitratorCashOut", function () {
-        console.log('usertryClickAdmin')
-        that.arbitratorCashOut();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#closeContract", function () {
-        console.log('usertryClickAdmin')
-        that.closeContract();
-        console.log('UserClick')
-    });
-
-    $(document).on("click", "#checkContractBal", function () {
-        console.log('usertryClickAdmin')
-        that.checkContractBal();
-        console.log('UserClick')
-    });
-
-}
-
-function showStatus(text) {
-    alert(text);
-}
-
-// Create the instance of the `TaskCreate` object 
-TaskCreate.prototype.onReady = function () {
-    this.bindButtons();
-    this.init();
-};
-
-if (typeof (Contracts) === "undefined") var Contracts = { TaskCreate: { abi: [] } };
-var task = new TaskCreate(Contracts['TaskCreate']);
-
-$(document).ready(function () {
-    task.onReady();
-});
+    </style>
+
+<body class="w3-light-grey">
+    <nav class="w3-sidebar w3-indigo w3-collapse w3-top w3-large w3-padding"
+        style="z-index:3;width:300px;font-weight:bold;" id="mySidebar"><br>
+        <a href="javascript:void(0)" onclick="w3_close()" class="w3-button w3-hide-large w3-display-topleft"
+            style="width:100%;font-size:22px">Close Menu</a>
+        <div class="w3-container">
+            <h3 class="w3-padding-64"><b>TaskChain<br>Functions</b></h3>
+        </div>
+
+        <!-- Top menu on small screens -->
+        <header class="w3-container w3-top w3-hide-large w3-red w3-xlarge w3-padding">
+            <a href="javascript:void(0)" class="w3-button w3-red w3-margin-right" onclick="w3_open()">☰</a>
+            <span>TaskChain Functions Menu</span>
+        </header>
+        <div class="w3-bar-block">
+            <a href="#" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Home</a>
+            <a href="#newUserInputTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">New User</a>
+            <a href="#upgradeTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Upgrade User</a>
+            <a href="#arbitratorTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Create
+                Arbitrator</a>
+            <a href="#createAdminTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Appoint
+                Admin</a>
+            <a href="#adminControlTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Admin Access
+                Control</a>
+            <a href="#createContractTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Create
+                Contract</a>
+            <a href="#performWorkTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Perform Work</a>
+            <a href="#reviewWorkTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Review Work</a>
+            <a href="#arbitrateWorkTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Arbitrate
+                Work</a>
+            <a href="#transferEscrowTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Transfer
+                Escrow</a>
+            <a href="#cashOutWorkerTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Cash Out
+                (Worker)</a>
+            <a href="#cashOutArbitratorTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Cash Out
+                (Arbitrator)</a>
+            <a href="#checkContractBalTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Check
+                Contract Balance</a>
+            <a href="#closeContractTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Close
+                Contract</a>
+
+        </div>
+    </nav>
+    <div class="w3-main" style="margin-left:340px;margin-right:40px">
+
+        <h1>Welcome to TaskChain </h1><br>
+        <div class="message"></div>
+        <h2><b>New User and Adminstrative Section</b></h2>
+        <hr style="width:50px;border:5px solid red" class="w3-round">
+
+        <div class="w3-content">
+            <div></div>
+            <h3 id="newUserInputTag">Please Input UserName and Type</h3>
+            <label for="userName">userName</label><br>
+            <input type="text" id="userName" placeholder="User Name"><br>
+            <form>
+                <select id="userType">
+                    <option value="0">Creator</option>
+                    <option value="1">Worker</option>
+                </select>
+            </form>
+            <button class="w3-ripple w3-white w3-hover-indigo" id="createUser">Create User</button>
+        </div><br><br>
+        <div class="w3-content">
+            <h3 id="getUserCountTag">isUser</h3>
+            <label for="userCheckAddress">Address</label>
+            <input type="text" id="userCheckAddress" plaeholder="address"><br>
+            <button class="btn" id="getUserCountBtn">isUser</button>
+            <h4 class="text message">Balance:&nbsp;<span id="message"></span></h4>
+
+        </div><br><br>
+
+        <div class="w3-content">
+            <h3 id="upgradeTag">Upgrade User to New Tier</h3>
+            <button class="btn" id="updateUserTier">Upgrade User</button>
+        </div><br><br>
+        <div class="w3-content">
+            <h3 id="arbitratorTag">Create Arbitrator</h3>
+            <button class="btn" id="appointArbitrator">Request Arbitrator Status</button>
+        </div><br><br>
+        <div class="w3-content">
+            <h3 id="createAdminTag">Appoint Admin</h3>
+            <label for="adminAddress">Admin Address:</label>
+            <input type="text" id="adminAddress" placeholder="address"><br>
+            <button class="btn" id="createAdmin">Upgrade to Admin</button>
+            <button class="btn" id="demoteAdmin">Demote Admin</button>
+        </div><br><br>
+        <div class="w3-content">
+            <h3 id="adminControlTag">Admin Access Control</h3>
+            <label for="restrictAccountAddress">Address to be Changed:</label>
+            <input type="text" id="restrictAccountAddress" placeholder="address"><br>
+            <button class="btn" id="restrictAccount">Restrict Account</button>
+            <button class="btn" id="restoreAccount">Restore Account</button>
+        </div><br><br>
+        <h2><b>TaskCreate Section</b></h2>
+        <hr style="width:50px;border:5px solid red" class="w3-round">
+
+        <div class="w3-content">
+            <h3 id="createContractTag">Create New Contract</h3>
+            <label for="msgValue">Task Total Value:</label><br>
+            <input type="number" id="msgValue" placeholder="value"><br>
+            <label for="quota">Number of Workers Desired:</label><br>
+            <input type="number" id="quota" placeholder="quota">
+            <form id="taskTier">
+                <select>
+                    <option value=0>Tier One</option>
+                    <option value=1>Tier Two</option>
+                    <option value=2>Tier Three</option>
+                </select>
+            </form>
+
+            <button class="btn" id="createContract">Create Contract</button>
+        </div>
+        <div class="w3-content">
+            <br><br>
+            <h3 id="performWorkTag">Perform Work</h3>
+            <label for="completeWorkAddress">Task Address:</label><br>
+            <input type="text" id="completeWorkAddress" placeholder="address"><br>
+            <button class="btn" id="completeWork">Complete Work</button>
+        </div><br><br>
+        <div class="w3-content">
+            <h3 id="reviewWorkTag">Review Work(Creator)</h3>
+            <label for="reviewAddress">Address to Review</label><br>
+            <input type="text" id="reviewAddress" placeholder="address"><br>
+            <form>
+                <select id="reviewPassFail">
+                    <option value=true>Pass</option>
+                    <option value=false>Fail</option>
+                </select>
+            </form><br>
+            <button class="btn" id="reviewWork">Complete Review</button>
+        </div><br><br>
+        <div class="w3-content">
+            <h3 id="arbitrateWorkTag">Arbitrate Work</h3>
+            <label for="contractArbAdd">Contract Address:</label>
+            <input type="text" id="contractArbAdd" placeholder="address"><br>
+            <label for="workerArbAdd">Worker Address:</label>
+            <input type="text" id="workerArbAdd" placeholder="address"><br>
+            <form id="reviewArbPassFail">
+                <select>
+                    <option value=0>Pass</option>
+                    <option value=1>Fail</option>
+                </select>
+            </form><br>
+            <button class="btn" id="arbitrateWork">Complete Arbitration</button>
+        </div><br><br>
+        <div class="w3-content">
+            <h3 id="transferEscrowTag">Transfer from Escrow(Workers)</h3>
+            <button class="btn" id="transferEscrow">Transfer to Account</button>
+        </div><br><br>
+
+        <div class="w3-content">
+            <h3 id="cashOutWorkerTag">Cash Out (Worker)</h3>
+            <button class="btn" id="workCashOut">Cash out Balance</button>
+        </div><br><br>
+
+        <div class="w3-content">
+            <h3 id="cashOutArbitratorTag">Cash Out (Arbitrator)</h3>
+            <button class="btn" id="arbitratorCashOut">Cash out Balance</button>
+        </div><br><br>
+
+        <div class="w3-content">
+            <h3 id="checkContractBalTag">Check Contract Balance(Creator)</h3>
+            <button class="btn" id="checkContractBal">Contract Bal</button>
+            <h3 class="text message">Balance:nbsp;<span id="contractBalanceMessage"></span></h3>
+        </div><br><br>
+
+        <div class="w3-content">
+            <h3 id="closeContractTag">Close Contract(Creator)</h3>
+            <button class="btn" id="closeContractButton">Close Contract</button>
+            
+        </div><br><br>
+
+
+
+
+        </head>
+
+        <body>
+            <h1><span id="message"></span></h1>
+        </body>
+
+</html>
