@@ -197,12 +197,86 @@
         "type": "function"
     },
     {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "contractAddress",
+                "type": "address"
+            }
+        ],
+        "name": "checkContractStruct",
+        "outputs": [
+            {
+                "name": "ContractOwner",
+                "type": "address"
+            },
+            {
+                "name": "value",
+                "type": "uint256"
+            },
+            {
+                "name": "quota",
+                "type": "uint256"
+            },
+            {
+                "name": "payout",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "constant": false,
         "inputs": [],
         "name": "closeContract",
         "outputs": [],
         "payable": true,
         "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "userAccounts",
+        "outputs": [
+            {
+                "name": "isUsed",
+                "type": "bool"
+            },
+            {
+                "name": "userName",
+                "type": "string"
+            },
+            {
+                "name": "userTier",
+                "type": "uint8"
+            },
+            {
+                "name": "userType",
+                "type": "uint8"
+            },
+            {
+                "name": "tasksCompleted",
+                "type": "uint256"
+            },
+            {
+                "name": "accountStatus",
+                "type": "uint8"
+            },
+            {
+                "name": "isAdmin",
+                "type": "bool"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -296,8 +370,8 @@
         "name": "updateUserTier",
         "outputs": [
             {
-                "name": "success",
-                "type": "bool"
+                "name": "_success",
+                "type": "string"
             }
         ],
         "payable": false,
@@ -575,17 +649,152 @@
         "type": "function"
     },
     {
+        "inputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
         "anonymous": false,
         "inputs": [
             {
-                "indexed": false,
-                "name": "Creator",
+                "indexed": true,
+                "name": "_from",
                 "type": "address"
             },
             {
                 "indexed": false,
-                "name": "value",
+                "name": "_username",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "name": "_userType",
+                "type": "uint8"
+            }
+        ],
+        "name": "NewUserRegistered",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "name": "_from",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "name": "_success",
+                "type": "string"
+            }
+        ],
+        "name": "UserTierUpgrade",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "name": "_from",
+                "type": "address"
+            }
+        ],
+        "name": "appointedArbitrator",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "name": "_from",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "name": "_to",
+                "type": "address"
+            }
+        ],
+        "name": "newAdmin",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "name": "_from",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "name": "_to",
+                "type": "address"
+            }
+        ],
+        "name": "removeAdmin",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "name": "_from",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "name": "_to",
+                "type": "address"
+            }
+        ],
+        "name": "newRestrictedAccount",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "name": "_from",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "name": "_to",
+                "type": "address"
+            }
+        ],
+        "name": "removeRestrictAccount",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "name": "_from",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "name": "_value",
                 "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "name": "_payout",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "name": "_usertier",
+                "type": "uint8"
             }
         ],
         "name": "ContractCreated",
@@ -595,13 +804,13 @@
         "anonymous": false,
         "inputs": [
             {
-                "indexed": false,
-                "name": "Creator",
+                "indexed": true,
+                "name": "_from",
                 "type": "address"
             },
             {
                 "indexed": false,
-                "name": "payout",
+                "name": "_bal",
                 "type": "uint256"
             }
         ],
@@ -612,13 +821,18 @@
         "anonymous": false,
         "inputs": [
             {
-                "indexed": false,
-                "name": "Worker",
+                "indexed": true,
+                "name": "_from",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "name": "_to",
                 "type": "address"
             },
             {
                 "indexed": false,
-                "name": "balanceContract",
+                "name": "payout",
                 "type": "uint256"
             }
         ],
@@ -651,24 +865,61 @@
         "anonymous": false,
         "inputs": [
             {
-                "indexed": false,
-                "name": "userAddress",
+                "indexed": true,
+                "name": "_from",
                 "type": "address"
+            },
+            {
+                "indexed": true,
+                "name": "_to",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "name": "_contract",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "name": "_arbitrateResult",
+                "type": "bool"
             }
         ],
-        "name": "NewUserRegistered",
+        "name": "arbitrationWorking",
         "type": "event"
     },
     {
         "anonymous": false,
         "inputs": [
             {
+                "indexed": true,
+                "name": "_from",
+                "type": "address"
+            },
+            {
                 "indexed": false,
-                "name": "",
-                "type": "uint8"
+                "name": "_balance",
+                "type": "uint256"
             }
         ],
-        "name": "UserTierUpgrade",
+        "name": "transferEscrowOut",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "name": "_from",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "name": "_bal",
+                "type": "uint256"
+            }
+        ],
+        "name": "cashOut",
         "type": "event"
     }
 ]
