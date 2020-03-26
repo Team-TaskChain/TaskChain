@@ -140,11 +140,6 @@ contract TaskCreate {
    }
    
 
-
-
-	    
-	    
-  
   
   //stores variables for contract in and out
   uint public conntractStartTime;
@@ -182,6 +177,15 @@ contract TaskCreate {
   function addTaskComplete() internal {
     userStructs[msg.sender].tasksCompleted+= 1;
   }
+  
+  
+  function checkContractStruct(address contractAddress) public view returns (address ContractOwner, uint256 value, uint256 quota, uint256 payout) {
+    ContractOwner = contractStruct[contractAddress].ContractOwner;
+    value = contractStruct[contractAddress].value;
+    quota = contractStruct[contractAddress].quota;
+    payout = contractStruct[contractAddress].payout;
+  }
+    
 
 //creates a new contract
 function createContract(uint _taskTier, uint256 _quota, uint amount) public onlyCreators payable {
@@ -210,7 +214,7 @@ function createContract(uint _taskTier, uint256 _quota, uint amount) public only
    
     //enables the completion of work: TODO add arbitration requirement	   
 	 function completeWork(address _add) public onlyWorkers payable {
-	     require(contractBalance[_add] > contractStruct[_add].payout, 'Insufficient Contract Funds');
+	     require(contractBalance[_add] > contractStruct[_add].payout, "Insufficient Contract Funds");
 	     require(contractStruct[_add].activeContract!=false, "contract is not open");
 	     require(msg.sender != contractStruct[_add].ContractOwner, "you can't work on your own stuff");
 	     require(userStructs[msg.sender].userTier==contractStruct[_add].userTier, "You Have Insufficient Rank");
@@ -222,12 +226,11 @@ function createContract(uint _taskTier, uint256 _quota, uint amount) public only
         }
         
     function reviewWork(bool _passFail, address _add) onlyCreators public {
-        require(workerPass[_add]==false, "The worker must not have passed to arbitrate");
-        require(contractStruct[_add].ContractOwner==msg.sender);
+        require(workerPass[_add]==false, "The worker must not have passed to review");
+        require(contractStruct[msg.sender].ContractOwner==msg.sender, "Only the owner can review work!");
         if (_passFail==true){
             workerPass[_add]=true;
         } else {
-            
         emit callArbitration(msg.sender, _add, _passFail);    
         }
     }
@@ -253,7 +256,7 @@ function createContract(uint _taskTier, uint256 _quota, uint amount) public only
     }
         
     function transferEscrow() public onlyWorkers payable{
-        require(workerPass[msg.sender]!= false, 'Your work must be reviewed');
+        require(workerPass[msg.sender]== true, 'Your work must be reviewed');
         uint256 actBal;
         actBal = workerEscrow[msg.sender];
         workerEscrow[msg.sender]-= actBal;
