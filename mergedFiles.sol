@@ -1,6 +1,6 @@
 pragma solidity >=0.4.22 <0.7.0;
 
-contract UserIndex {
+contract TaskCreate {
     
     //defines userType: Creators add tasks, Workers complete tasks, Arbitrators resolve disputes, Admins perform administrative and punitive functions
     enum UserType {Creator, Worker, Arbitrator, Admin}
@@ -62,7 +62,9 @@ contract UserIndex {
     
     //stores the address for all useraccounts
     mapping(address => UserAccount) public userStructs;
+    UserAccount[] public userAccounts;
     address[] public userLists;
+
     
     //retrieves user info
     function getUser(address n) public view returns(bool, string memory, UserTier, UserType, uint256, AccountStatus){
@@ -86,7 +88,7 @@ contract UserIndex {
         userStructs[msg.sender].userType = UserType(_index);
         userStructs[msg.sender].userName = userName;
         userStructs[msg.sender].isUsed = true;
-        userStructs[msg.sender].isAdmin = false;
+        userStructs[msg.sender].isAdmin = false;        
         return userLists.push(msg.sender) - 1;
     }
     
@@ -137,9 +139,9 @@ contract UserIndex {
        
    }
    
-}
 
-contract TaskCreate is UserIndex {
+
+
 	    
 	    
   
@@ -182,7 +184,7 @@ contract TaskCreate is UserIndex {
   }
 
 //creates a new contract
-function createContract(uint _taskTier, uint256 _quota, uint amount) public payable {
+function createContract(uint _taskTier, uint256 _quota, uint amount) public onlyCreators payable {
     uint amountEscrow = amount*5 /100;
     uint contractAmount = amount * 95/100;
     contractStruct[msg.sender].ContractOwner = msg.sender;
@@ -193,7 +195,7 @@ function createContract(uint _taskTier, uint256 _quota, uint amount) public paya
     contractBalance[msg.sender] += contractAmount;
     contractStruct[msg.sender].activeContract = true;
     contractStruct[msg.sender].payout = contractAmount/_quota;
-    require(msg.value == amount);
+    require(msg.value == amount, "value mismatch!");
 }
   
   event callArbitration(address indexed _from, address indexed _to, bool _passFail);
