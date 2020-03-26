@@ -369,7 +369,7 @@ TaskCreate.prototype.createContract = function () {
     console.log("tasktier: ", tasktier)
 
     // Check the balance from the address 
-    this.instance.createContract(tasktier, quota, value, send, { from: window.web3.eth.accounts[0], gas: 10000000, gasPrice: 1000000000, gasLimit: 100000 },
+    this.instance.createContract(tasktier, quota, value, { from: window.web3.eth.accounts[0], value: value, gas: 10000000, gasPrice: 1000000000, gasLimit: 100000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -404,6 +404,8 @@ TaskCreate.prototype.completeWork = function () {
 
     // Get input values, the address
     var address = $("#completeWorkAddress").val();
+    var newAddress = { from: window.web3.eth.accounts[0]};
+    console.log("sender addrewss", newAddress);
     if (!isValidAddress(address)) {
         showStatus("Please enter a valid address");
         return;
@@ -411,7 +413,7 @@ TaskCreate.prototype.completeWork = function () {
     console.log(address);
 
     // Check the balance from the address 
-    this.instance.completeWork(address, { from: window.web3.eth.accounts[0], gas: 100000, gasPrice: 1000000000, gasLimit: 100000 },
+    this.instance.completeWork(address, { from: window.web3.eth.accounts[0], gas: 1000000000, gasPrice: 1000000000, gasLimit: 100000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -444,7 +446,12 @@ TaskCreate.prototype.reviewWork = function () {
 
     // Get input values, the address
     var address = $("#reviewAddress").val();
-    var passFail = $("#reviewPassFail").val();
+    var passFailVal = $("#reviewPassFail").val();
+    console.log("boolValue", passFailVal);
+
+    
+    console.log("address", address);
+    
 
     if (!isValidAddress(address)) {
         showStatus("Please enter a valid address");
@@ -453,7 +460,7 @@ TaskCreate.prototype.reviewWork = function () {
     console.log(address);
 
     // Check the balance from the address 
-    this.instance.reviewWork(address, passFail, { from: window.web3.eth.accounts[0], gas: 100000, gasPrice: 1000000000, gasLimit: 100000 },
+    this.instance.reviewWork(passFailVal, address,{ from: window.web3.eth.accounts[0], gas: 1000000000, gasPrice: 1000000000, gasLimit: 100000000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -471,6 +478,7 @@ TaskCreate.prototype.reviewWork = function () {
                     }
                     else {
                         console.log("receipt error");
+                        console.log(receipt);
 
                     }
                 });
