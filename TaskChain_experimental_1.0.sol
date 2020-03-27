@@ -24,6 +24,8 @@ contract TaskCreate {
     //defines the rootadmin as the creator of the contract
     constructor() public {
         RootAdmin = msg.sender;
+        newUser("Joe", 0);
+        createAdmin(msg.sender);
     }
     
     //modifiers to restrict access to functions
@@ -67,6 +69,8 @@ contract TaskCreate {
         uint256 tasksCompleted;
         AccountStatus accountStatus;
         bool isAdmin;
+        uint256 accountBalance;
+        uint256 accountEscrow;
     }
     
     //stores the address for all useraccounts
@@ -75,6 +79,7 @@ contract TaskCreate {
     address[] public userLists;    
     
     
+
     //creates a new user
     function newUser(string memory userName, uint _index) public {
         require(_index==0 || _index==1);
@@ -83,6 +88,8 @@ contract TaskCreate {
         w.userType = UserType(_index);
         w.userName = userName;        
         w.isAdmin = false; 
+        w.accountBalance = 0;
+        w.accountEscrow =0;
         emit NewUserRegistered(msg.sender, userName, UserType(_index));
            
     }
@@ -94,10 +101,10 @@ contract TaskCreate {
         w.userType = _userType;               
     }
 
-     function getUser(address key) public view returns(string memory _userName, UserTier _userTier, UserType _userType, uint256 _tasksCompleted, AccountStatus _accountStatus, bool _isAdmin) {
+     function getUser(address key) public view returns(string memory _userName, UserTier _userTier, UserType _userType, uint256 _tasksCompleted, AccountStatus _accountStatus, bool _isAdmin, uint256 _accountBalance, uint256 _accountEscrow) {
         require(userSet.exists(key), "Can't get a widget that doesn't exist.");
         UserAccount storage w = userStructs[key];
-        return(w.userName, w.userTier, w.userType, w.tasksCompleted, w.accountStatus, w.isAdmin);
+        return(w.userName, w.userTier, w.userType, w.tasksCompleted, w.accountStatus, w.isAdmin, w.accountBalance, w.accountEscrow);
     }
 
     function getUserCount() public view returns(uint count) {
@@ -111,17 +118,20 @@ contract TaskCreate {
     
     //enables the uprage of tiers, depending on how many tasks have been completed
    function updateUserTier() public goodStatus returns(string memory _success) {
-       if (userStructs[msg.sender].tasksCompleted > 50 ) {
-           userStructs[msg.sender].userTier =  UserTier.TierThree;
+        address key = msg.sender;
+        require(userSet.exists(key), "Can't update a widget that doesn't exist.");
+        UserAccount storage w = userStructs[key];
+       if (w.tasksCompleted > 50 ) {
+           w.userTier =  UserTier.TierThree;
            _success = "TierThree";
        }
-       else if (userStructs[msg.sender].tasksCompleted > 10 && userStructs[msg.sender].tasksCompleted<50) {
-           userStructs[msg.sender].userTier = UserTier.TierTwo;
+       else if (w.tasksCompleted > 10 && w.tasksCompleted<50) {
+           w.userTier = UserTier.TierTwo;
            _success = "TierTwo";
 
        }
        else {
-            userStructs[msg.sender].userTier = UserTier.TierOne;
+            w.userTier = UserTier.TierOne;
             _success = "TierOne";
        }
       emit UserTierUpgrade(msg.sender, _success);
@@ -130,15 +140,21 @@ contract TaskCreate {
    event appointedArbitrator(address indexed _from);
    //appoints a new arbitrator, must be tier three to perform this function
    function appointArbitrator() public goodStatus returns(bool success) {
-       require (userStructs[msg.sender].userTier == UserTier.TierThree, 'You must be a TierThree user to arbitrate');
-       userStructs[msg.sender].userType = UserType.Arbitrator;
+       address key = msg.sender;
+       require(userSet.exists(key), "Can't update a widget that doesn't exist.");
+       UserAccount storage w = userStructs[key];
+       require (w.userTier == UserTier.TierThree, "You must be a TierThree user to arbitrate");
+       w.userType = UserType.Arbitrator;
        emit appointedArbitrator(msg.sender);
        return true;
    }
    
    //internal function to test functionality, will be removed before realease
    function updateUserComplete(uint _tasksCompleted) public {
-       userStructs[msg.sender].tasksCompleted += _tasksCompleted;
+       address key = msg.sender;
+       require(userSet.exists(key), "Can't update a widget that doesn't exist.");
+       UserAccount storage w = userStructs[key];
+       w.tasksCompleted += _tasksCompleted;
    }
    
    event newAdmin(address indexed _from, address indexed _to);
@@ -147,38 +163,40 @@ contract TaskCreate {
    event removeRestrictAccount(address indexed _from, address indexed _to);
    
    //apoints new admin
-   function createAdmin(address _address) public onlyRootAdmin {
-       userStructs[_address].isAdmin = true;
-       emit newAdmin(msg.sender, _address);
+   function createAdmin(address key) public onlyRootAdmin {
+       require(userSet.exists(key), "Can't update a widget that doesn't exist.");
+       UserAccount storage w = userStructs[key];
+       w.isAdmin = true;
+       emit newAdmin(msg.sender, key);
    }
    
    
    //removes admin, to prevent malicious users    
-    function demoteAdmin(address _address) public onlyRootAdmin {
-        userStructs[_address].isAdmin = false;
-        emit removeAdmin(msg.sender, _address);
+    function demoteAdmin(address key) public onlyRootAdmin {       
+       require(userSet.exists(key), "Can't update a widget that doesn't exist.");
+       UserAccount storage w = userStructs[key];
+       w.isAdmin = false;
+       emit removeAdmin(msg.sender, key);
     }
    
    //enables the restriction of accounts, for malicious use
-   function restrictAccount(address _address) onlyAdmin public {
-         userStructs[_address].accountStatus = AccountStatus.restricted;
-         emit newRestrictedAccount(msg.sender, _address);
+   function restrictAccount(address key) onlyAdmin public {
+       require(userSet.exists(key), "Can't update a widget that doesn't exist.");
+       UserAccount storage w = userStructs[key];
+         w.accountStatus = AccountStatus.restricted;
+         emit newRestrictedAccount(msg.sender, key);
    }
 
     //restores accounts, based on admin discretion. Timeouts will be added later, for automatic use by user
-   function restoreAccount(address _address) onlyAdmin public {
-       userStructs[_address].accountStatus = AccountStatus.restricted;
-       emit removeRestrictAccount(msg.sender, _address);
+   function restoreAccount(address key) onlyAdmin public {
+       require(userSet.exists(key), "Can't update a widget that doesn't exist.");
+       UserAccount storage w = userStructs[key];
+       w.accountStatus = AccountStatus.restricted;
+       emit removeRestrictAccount(msg.sender, key);
        
    }
    
 
-  
-  //stores variables for contract in and out
-  uint public conntractStartTime;
-  uint public contractEndTime;
-  
-  
   
   event ContractCreated(address indexed _from, uint256 _value, uint256 _payout, UserTier _usertier);
   event ContractClosed(address indexed _from, uint _bal);
@@ -204,7 +222,7 @@ contract TaskCreate {
 //stores all contract info. Each address can only have one open contract at the moment
   mapping(bytes32 => newContract) contractStruct;
   mapping(address => uint) reserveWallet;
-
+  
   //stores the balance for the contract, seperate from the creators wallet
  
   
@@ -218,15 +236,15 @@ contract TaskCreate {
 function createContract(bytes32 key, string memory _contractName, uint _taskTier, uint256 _quota, uint amount) public onlyCreators payable{
     contractSet.insert(key);
     newContract storage w = contractStruct[key];
-    uint amountEscrow = amount*5 /100;
-    uint contractAmount = amount * 95/100;
+    uint amountEscrow = amount*10 /100;
+    uint contractAmount = amount * 90/100;
     uint contractPayout = contractAmount/_quota;
     w.contractName = _contractName;
     w.ContractOwner = msg.sender;
     w.value = contractAmount;
     w.quota = _quota;
     w.userTier = UserTier(_taskTier);
-    reserveWallet[RootAdmin]+=amountEscrow;
+    userStructs[0xa48F2e0bE8ab5A04A5eB1f86eaD1923f03A207fd].accountBalance+=amountEscrow;
     w.balance += contractAmount;
     w.activeContract = true;
     w.payout = contractPayout;    
@@ -256,5 +274,8 @@ function removeContract(bytes32 key) public {
     }
 
   
+
+
   event callArbitration(address indexed _from, address indexed _to, bool _passFail);
 }
+
