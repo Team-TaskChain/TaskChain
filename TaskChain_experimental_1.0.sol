@@ -1,5 +1,6 @@
 pragma solidity >=0.4.22 <0.7.0;
 import "./HitchensUnorderedAddressSetLib.sol";
+import "./HitchensUnorderedKeySetLib.sol";
 
 
 
@@ -7,7 +8,9 @@ contract TaskCreate {
 
     using HitchensUnorderedAddressSetLib for HitchensUnorderedAddressSetLib.Set;
     HitchensUnorderedAddressSetLib.Set userSet;
-    HitchensUnorderedAddressSetLib.Set contractSet;
+    using HitchensUnorderedKeySetLib for HitchensUnorderedKeySetLib.Set;
+    HitchensUnorderedKeySetLib.Set contractSet;
+    
     
     //defines userType: Creators add tasks, Workers complete tasks, Arbitrators resolve disputes, Admins perform administrative and punitive functions
     enum UserType {Creator, Worker, Arbitrator, Admin}
@@ -189,165 +192,69 @@ contract TaskCreate {
 // based structure for contracts, with quota being the number of times the work will be completed, value being the embedded escrow for the contract, and payout being automatic depeding on value/quota
   struct newContract {
       address ContractOwner;
+      string contractName;
       uint256 value;
       uint256 quota;
       uint256 payout;
       UserTier userTier;
-      bool activeContract;
-      bool isCreated;
+      bool activeContract;  
+      uint256 balance;      
   }
 
 //stores all contract info. Each address can only have one open contract at the moment
-  mapping(address => newContract) contractStruct;
-  address[] public contractLists;
-
-
-   function isEntity(address entityAddress) public view returns(bool isIndeed) {
-      return contractStruct[entityAddress].isCreated;
-  }
-
-  function getEntityCount() public view returns(uint entityCount) {
-    return contractLists.length;
-  }
+  mapping(bytes32 => newContract) contractStruct;
+  mapping(address => uint) reserveWallet;
 
   //stores the balance for the contract, seperate from the creators wallet
-  mapping(address => uint) public contractBalance;
+ 
   
   
   //internal function to add a new takscompletion after work is done
   function addTaskComplete() internal {
     userStructs[msg.sender].tasksCompleted+= 1;
-  }
-  
-  
-  function checkContractStruct(address contractAddress) public view returns (address ContractOwner, uint256 value, uint256 quota, uint256 payout, uint256 currentBalance, bool Open, UserTier _userTier) {
-    ContractOwner = contractStruct[contractAddress].ContractOwner;
-    value = contractStruct[contractAddress].value;
-    quota = contractStruct[contractAddress].quota;
-    payout = contractStruct[contractAddress].payout;
-    currentBalance = contractBalance[contractAddress];
-    Open = contractStruct[contractAddress].activeContract;
-    _userTier = contractStruct[contractAddress].userTier;
-    return(ContractOwner, value, quota, payout, currentBalance, Open, _userTier);
-  }
-    
+  }     
 
 //creates a new contract
-function createContract(uint _taskTier, uint256 _quota, uint amount) public onlyCreators payable returns(uint rowNumber)  {
+function createContract(bytes32 key, string memory _contractName, uint _taskTier, uint256 _quota, uint amount) public onlyCreators payable{
+    contractSet.insert(key);
+    newContract storage w = contractStruct[key];
     uint amountEscrow = amount*5 /100;
     uint contractAmount = amount * 95/100;
     uint contractPayout = contractAmount/_quota;
-    contractStruct[msg.sender].ContractOwner = msg.sender;
-    contractStruct[msg.sender].value = contractAmount;
-    contractStruct[msg.sender].quota = _quota;
-    contractStruct[msg.sender].userTier = UserTier(_taskTier);
+    w.contractName = _contractName;
+    w.ContractOwner = msg.sender;
+    w.value = contractAmount;
+    w.quota = _quota;
+    w.userTier = UserTier(_taskTier);
     reserveWallet[RootAdmin]+=amountEscrow;
-    contractBalance[msg.sender] += contractAmount;
-    contractStruct[msg.sender].activeContract = true;
-    contractStruct[msg.sender].payout = contractPayout;  
-    contractStruct[msg.sender].isCreated = true;
+    w.balance += contractAmount;
+    w.activeContract = true;
+    w.payout = contractPayout;    
     emit ContractCreated(msg.sender, contractAmount, contractPayout, UserTier(_taskTier));
-    return contractLists.push(msg.sender) - 1;
-}
-  
-  event callArbitration(address indexed _from, address indexed _to, bool _passFail);
-  
-    //mapping for the worker wallet to store funds
-   mapping(address => uint) public workerEscrow;
-   mapping(address => uint) public workerWallet; 
-   mapping(address => bool) public workerPass;
-   mapping(address => bool) public requiresArbitration;
-   mapping(address => uint) public arbitrationWallet;
-   mapping(address => uint) public reserveWallet;
-   
-    //enables the completion of work: TODO add arbitration requirement	   
-	 function completeWork(address _add) public onlyWorkers payable {
-	     require(contractBalance[_add] > contractStruct[_add].payout, "Insufficient Contract Funds");
-	     require(contractStruct[_add].activeContract!=false, "contract is not open");
-	     require(msg.sender != contractStruct[_add].ContractOwner, "you can't work on your own stuff");
-	     require(userStructs[msg.sender].userTier==contractStruct[_add].userTier, "You Have Insufficient Rank");
-	     workerEscrow[msg.sender]+= contractStruct[_add].payout;
-	     contractBalance[_add] -= contractStruct[_add].payout;
-	     addTaskComplete();
-	     workerPass[msg.sender] = false;
-	     emit workDone(_add, msg.sender, contractStruct[_add].payout);
-        }
-        
-    function reviewWork(bool _passFail, address _add) onlyCreators public {
-        require(workerPass[_add]==false, "The worker must not have passed to review");
-        require(contractStruct[msg.sender].ContractOwner==msg.sender, "Only the owner can review work!");
-        if (_passFail==true){
-            workerPass[_add]=true;
-        } else {
-        emit callArbitration(msg.sender, _add, _passFail);    
-        }
+   }
+function updateContract(bytes32 key, string memory _contractName) public {
+        require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
+        newContract storage w = contractStruct[key];
+        w.contractName = _contractName;         
     }
-    
-    event arbitrationWorking(address indexed _from, address indexed _to, address indexed _contract, bool _arbitrateResult);
-    event transferEscrowOut(address indexed _from, uint256 _balance);
-    
-    //Controls arbitration functions
-    function arbitrateWork(bool _passFail, address _workerAdd, address _contractAdd ) onlyArbitrator public payable {
-        require(workerPass[_workerAdd]==false, "The worker must not have passed to arbitrate");
-        if (_passFail==true){
-            workerPass[_workerAdd]=true;
-            reserveWallet[RootAdmin]-=contractStruct[_contractAdd].payout;
-            contractBalance[_contractAdd]-=2*contractStruct[_contractAdd].payout;
-            workerEscrow[msg.sender]+=contractStruct[_contractAdd].payout;
-            arbitrationWallet[msg.sender]+=2*contractStruct[_contractAdd].payout;
-            emit arbitrationWorking(msg.sender, _workerAdd, _contractAdd, _passFail);
-            }
-        else if (_passFail==false) {
-            workerPass[_workerAdd]=false;
-            reserveWallet[RootAdmin]-= 2 * contractStruct[_contractAdd].payout;
-            workerEscrow[_workerAdd]-=contractStruct[_contractAdd].payout;
-            arbitrationWallet[msg.sender]+=2*contractStruct[_contractAdd].payout;
-            contractBalance[_contractAdd]+= contractStruct[_contractAdd].payout;
-            emit arbitrationWorking(msg.sender, _workerAdd, _contractAdd, _passFail);
-        }
-    }
-        
-    function transferEscrow() public onlyWorkers payable{
-        require(workerPass[msg.sender]== true, 'Your work must be reviewed');
-        uint256 actBal;
-        actBal = workerEscrow[msg.sender];
-        workerEscrow[msg.sender]-= actBal;
-        workerWallet[msg.sender]+= actBal;
-        emit transferEscrowOut(msg.sender, actBal);
-        
-    }
-    event cashOut(address indexed _from, uint256 _bal);
-    
-    //cashes out worker wallet to worker: TODO add arbitration restrictions
-    function workCashOut() onlyWorkers public payable {
-       uint256 accountBal;
-       accountBal= workerWallet[msg.sender];
-       workerWallet[msg.sender]-= accountBal;
-       msg.sender.transfer(accountBal);
-       emit cashOut(msg.sender, accountBal);
-    }
-    
-    function arbitratorCashOut() public onlyArbitrator payable {
-        uint256 accountBal;
-        accountBal = arbitrationWallet[msg.sender];
-        arbitrationWallet[msg.sender]-=accountBal;
-        msg.sender.transfer(accountBal);
-        emit cashOut(msg.sender, accountBal);
-    }
-    // closes the contract, and empties wallet back to creator
-    function closeContract() onlyCreators public payable {
-        require(msg.sender==contractStruct[msg.sender].ContractOwner, "only the owner can close the contract");
-        uint256 accountBal;
-        accountBal= contractBalance[msg.sender];
-        contractBalance[msg.sender]-=accountBal;
-        contractStruct[msg.sender].activeContract = false;
-        msg.sender.transfer(accountBal);
-        emit ContractClosed(msg.sender, accountBal);
+function removeContract(bytes32 key) public {
+        contractSet.remove(key); // Note that this will fail automatically if the key doesn't exist
+        delete contractStruct[key];        
     }
 
-    //checks current balance for the contract wallet
-    function checkContractBal(address _address) view public returns (uint _currentBal) {
-        _currentBal = contractBalance[_address];
-        return _currentBal;
+ function getContract(bytes32 key) public view returns(address _ContractOwner, string memory _contractName, uint256 _value, uint256 _quota, uint256 _payout, UserTier _userTier, uint256 _balance) {
+        require(contractSet.exists(key), "Can't get a widget that doesn't exist.");
+        newContract storage w = contractStruct[key];
+        return(w.ContractOwner, w.contractName, w.value, w.quota, w.payout, w.userTier, w.balance);
     }
+    function getContractCount() public view returns(uint count) {
+        return contractSet.count();
+    }
+    
+    function getContractAtIndex(uint index) public view returns(bytes32 key) {
+        return contractSet.keyAtIndex(index);
+    }
+
+  
+  event callArbitration(address indexed _from, address indexed _to, bool _passFail);
 }
