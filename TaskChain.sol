@@ -1,5 +1,6 @@
 pragma solidity >=0.4.22 <0.7.0;
 
+
 contract TaskCreate {
     
     //defines userType: Creators add tasks, Workers complete tasks, Arbitrators resolve disputes, Admins perform administrative and punitive functions
@@ -182,11 +183,22 @@ contract TaskCreate {
       uint256 payout;
       UserTier userTier;
       bool activeContract;
+      bool isCreated;
   }
 
 //stores all contract info. Each address can only have one open contract at the moment
   mapping(address => newContract) contractStruct;
   address[] public contractLists;
+
+
+   function isEntity(address entityAddress) public view returns(bool isIndeed) {
+      return contractStruct[entityAddress].isCreated;
+  }
+
+  function getEntityCount() public view returns(uint entityCount) {
+    return contractLists.length;
+  }
+
   //stores the balance for the contract, seperate from the creators wallet
   mapping(address => uint) public contractBalance;
   
@@ -197,16 +209,20 @@ contract TaskCreate {
   }
   
   
-  function checkContractStruct(address contractAddress) public view returns (address ContractOwner, uint256 value, uint256 quota, uint256 payout) {
+  function checkContractStruct(address contractAddress) public view returns (address ContractOwner, uint256 value, uint256 quota, uint256 payout, uint256 currentBalance, bool Open, UserTier _userTier) {
     ContractOwner = contractStruct[contractAddress].ContractOwner;
     value = contractStruct[contractAddress].value;
     quota = contractStruct[contractAddress].quota;
     payout = contractStruct[contractAddress].payout;
+    currentBalance = contractBalance[contractAddress];
+    Open = contractStruct[contractAddress].activeContract;
+    _userTier = contractStruct[contractAddress].userTier;
+    return(ContractOwner, value, quota, payout, currentBalance, Open, _userTier);
   }
     
 
 //creates a new contract
-function createContract(uint _taskTier, uint256 _quota, uint amount) public onlyCreators payable {
+function createContract(uint _taskTier, uint256 _quota, uint amount) public onlyCreators payable returns(uint rowNumber)  {
     uint amountEscrow = amount*5 /100;
     uint contractAmount = amount * 95/100;
     uint contractPayout = contractAmount/_quota;
@@ -217,9 +233,10 @@ function createContract(uint _taskTier, uint256 _quota, uint amount) public only
     reserveWallet[RootAdmin]+=amountEscrow;
     contractBalance[msg.sender] += contractAmount;
     contractStruct[msg.sender].activeContract = true;
-    contractStruct[msg.sender].payout = contractPayout;
-    require(msg.value == amount, "value mismatch!");
+    contractStruct[msg.sender].payout = contractPayout;  
+    contractStruct[msg.sender].isCreated = true;
     emit ContractCreated(msg.sender, contractAmount, contractPayout, UserTier(_taskTier));
+    return contractLists.push(msg.sender) - 1;
 }
   
   event callArbitration(address indexed _from, address indexed _to, bool _passFail);
@@ -318,7 +335,8 @@ function createContract(uint _taskTier, uint256 _quota, uint amount) public only
     }
 
     //checks current balance for the contract wallet
-    function checkContractBal() view public returns (uint) {
-        return contractBalance[msg.sender];
+    function checkContractBal(address _address) view public returns (uint _currentBal) {
+        _currentBal = contractBalance[_address];
+        return _currentBal;
     }
 }
