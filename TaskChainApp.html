@@ -78,7 +78,7 @@
 
         <div class="w3-content">
             <div></div>
-            <h3 id="newUserInputTag">Please Input UserName and Type</h3>
+            <h3 id="newUserInputTag">Please Input User Name and Type</h3>
             <label for="userName">userName</label><br>
             <input type="text" id="userName" placeholder="User Name"><br>
             <form>
@@ -90,12 +90,25 @@
             <button class="w3-ripple w3-white w3-hover-indigo" id="createUser">Create User</button>
         </div><br><br>
         <div class="w3-content">
-            <h3 id="getUserCountTag">isUser</h3>
-            <label for="userCheckAddress">Address</label>
-            <input type="text" id="userCheckAddress" plaeholder="address"><br>
-            <button class="btn" id="getUserCountBtn">isUser</button>
+            <h3 id="getUserCountTag">Get User at Address</h3>
+            <label for="userCheckAddress">Address:</label>
+            <input type="text" id="userCheckAddress" placeholder="address"><br>
+            <button class="btn" id="getUserCountBtn">Get User</button>
             <h4 class="text message">Balance:&nbsp;<span id="message"></span></h4>
+        </div><br><br>
 
+        <div class="w3-content">
+            <h3 id="getUserAtIndexTag">User Index</h3>  
+            <label for="userIndex">Get User at Index</label><br>
+            <input type="number" id="userIndex" placeholder="Index"><br>
+           <button class="btn" id="getUserAtIndexBtn">Get User(Index)</button>            
+             <h4 class="text message">User Address:&nbsp;<span id="userAddressRetrieve"></span></h4>
+        </div><br><br>
+
+
+        <div class="w3-content">
+            <h3 id="getUserNumberTag">Get Number of Users</h3>
+            <button class="btn" id="getUserNumberBtn">Get Number</button>
         </div><br><br>
 
         <div class="w3-content">
@@ -125,10 +138,12 @@
 
         <div class="w3-content">
             <h3 id="createContractTag">Create New Contract</h3>
+            <label for="contractName">Contract Title:</label><br>
+            <input type="text" id="contractName" placeholder="Contract Title"><br>
             <label for="msgValue">Task Total Value:</label><br>
-            <input type="number" id="msgValue" placeholder="value"><br>
+            <input type="number" id="msgValue" placeholder="Value"><br>
             <label for="quota">Number of Workers Desired:</label><br>
-            <input type="number" id="quota" placeholder="quota">
+            <input type="number" id="quota" placeholder="Quota">
             <form id="taskTier">
                 <select>
                     <option value=0>Tier One</option>
@@ -138,18 +153,38 @@
             </form>
 
             <button class="btn" id="createContract">Create Contract</button>
-        </div>
-        <div class="w3-content">
-            <br><br>
-            <h3 id="performWorkTag">Perform Work</h3>
-            <label for="completeWorkAddress">Task Address:</label><br>
-            <input type="text" id="completeWorkAddress" placeholder="address"><br>
-            <button class="btn" id="completeWork">Complete Work</button>
         </div><br><br>
         <div class="w3-content">
+            <h3 id="getContractTag">Review Contract</h3>
+            <label for="contractKey">Input Contract Key</label><br>
+            <input type="text" id="contractKey" placeholder="Key"></br>
+            <button class="btn" id="getContractAtKey">Get Contract(Key)</button><br>
+            <h4 class="text message">Contract:&nbsp;<span id="ContractInfoRetrieve"></span></h4>
+           </div><br><br>
+        <div class="w3-content">
+            <h3 id="getContractAtIndexTag">Contract Index</h3>  
+            <label for="contractIndex">Get Contract at Index</label><br>
+            <input type="number" id="contractIndex" placeholder="Index"><br>
+           <button class="btn" id="getContractAtIndex">Get Contract(Index)</button>            
+             <h4 class="text message">Contract Key:&nbsp;<span id="ContractKeyRetrieve"></span></h4>
+
+
+
+        </div><br><br>
+
+        <div class="w3-content">            
+            <h3 id="performWorkTag">Perform Work</h3>
+            <label for="completeWorkAddress">Task Key:</label>
+            <input type="text" id="completeWorkAddress" placeholder="Key"><br>
+            <button class="btn" id="completeWork">Complete Work</button>            
+        </div><br><br>
+
+        <div class="w3-content">
             <h3 id="reviewWorkTag">Review Work(Creator)</h3>
-            <label for="reviewAddress">Address to Review</label><br>
-            <input type="text" id="reviewAddress" placeholder="address"><br>
+            <label for="reviewAddress">Address to Review: </label>
+            <input type="text" id="reviewAddress" placeholder="Address"><br>
+            <label for="contractKeyReview">Contract Key: </label>
+            <input type="text" id="contractKeyReview" placeholder="Key">
             <form>
                 <select id="reviewPassFail">
                     <option value=true>Pass</option>
@@ -160,10 +195,10 @@
         </div><br><br>
         <div class="w3-content">
             <h3 id="arbitrateWorkTag">Arbitrate Work</h3>
-            <label for="contractArbAdd">Contract Address:</label>
-            <input type="text" id="contractArbAdd" placeholder="address"><br>
-            <label for="workerArbAdd">Worker Address:</label>
-            <input type="text" id="workerArbAdd" placeholder="address"><br>
+            <label for="contractArbAdd">Contract Key: </label>
+            <input type="text" id="contractArbAdd" placeholder="Key"><br>
+            <label for="workerArbAdd">Worker Address: </label>
+            <input type="text" id="workerArbAdd" placeholder="Address"><br>
             <form id="reviewArbPassFail">
                 <select>
                     <option value=0>Pass</option>
@@ -178,28 +213,20 @@
         </div><br><br>
 
         <div class="w3-content">
-            <h3 id="cashOutWorkerTag">Cash Out (Worker)</h3>
+            <h3 id="cashOutWorkerTag">Cash Out</h3>
             <button class="btn" id="workCashOut">Cash out Balance</button>
-        </div><br><br>
-
-        <div class="w3-content">
-            <h3 id="cashOutArbitratorTag">Cash Out (Arbitrator)</h3>
-            <button class="btn" id="arbitratorCashOut">Cash out Balance</button>
-        </div><br><br>
-
-        <div class="w3-content">
-            <h3 id="checkContractBalTag">Check Contract Balance(Creator)</h3>
-            <button class="btn" id="checkContractBal">Contract Bal</button>
-            <h3 class="text message">Balance:nbsp;<span id="contractBalanceMessage"></span></h3>
-        </div><br><br>
+        </div><br><br>       
+        
 
         <div class="w3-content">
             <h3 id="closeContractTag">Close Contract(Creator)</h3>
+             <label for="closeContractKey">Contract Key: </label>
+            <input type="text" id="closeContractKey" placeholder="Key"><br>
             <button class="btn" id="closeContractButton">Close Contract</button>
             
         </div><br><br>
 
-
+   
 
 
         </head>
