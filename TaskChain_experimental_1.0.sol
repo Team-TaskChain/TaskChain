@@ -195,7 +195,7 @@ contract TaskChain {
    function restoreAccount(address key) onlyAdmin goodStatus public {
        require(userSet.exists(key), "Can't update a widget that doesn't exist.");
        UserAccount storage w = userStructs[key];
-       w.accountStatus = AccountStatus.restricted;
+       w.accountStatus = AccountStatus.good;
        emit removeRestrictAccount(msg.sender, key);
        
    }
