@@ -24,7 +24,7 @@ contract TaskCreate {
     //defines the rootadmin as the creator of the contract
     constructor() public {
         RootAdmin = msg.sender;
-        newUser("Joe", 0);
+        newUser("RootAdmin", 0);
         createAdmin(msg.sender);
     }
     
@@ -58,9 +58,13 @@ contract TaskCreate {
         _;
     }
     
+    modifier onlyOwner(bytes32 key) {
+        require(contractStruct[key].ContractOwner ==msg.sender, "only the contract owner may do this!");
+        _;
+    }
     
     event NewUserRegistered (address indexed _from, string _username, UserType _userType);
-    event UserTierUpgrade (address indexed _from, string _success);
+    event UserTierUpgrade (address indexed _from, string _success, UserTier _userTier);
 
     //the base structure for all user accouts. isUsed is to restrict users to one account per address, which helps presever status and rank
     struct UserAccount {        
@@ -135,7 +139,7 @@ contract TaskCreate {
             w.userTier = UserTier.TierOne;
             _success = "TierOne";
        }
-      emit UserTierUpgrade(msg.sender, _success);
+      emit UserTierUpgrade(msg.sender, _success, w.userTier);
       return _success;
         }
    event appointedArbitrator(address indexed _from);
@@ -181,7 +185,7 @@ contract TaskCreate {
     }
    
    //enables the restriction of accounts, for malicious use
-   function restrictAccount(address key) onlyAdmin public {
+   function restrictAccount(address key) onlyAdmin goodStatus public {
        require(userSet.exists(key), "Can't update a widget that doesn't exist.");
        UserAccount storage w = userStructs[key];
          w.accountStatus = AccountStatus.restricted;
@@ -189,7 +193,7 @@ contract TaskCreate {
    }
 
     //restores accounts, based on admin discretion. Timeouts will be added later, for automatic use by user
-   function restoreAccount(address key) onlyAdmin public {
+   function restoreAccount(address key) onlyAdmin goodStatus public {
        require(userSet.exists(key), "Can't update a widget that doesn't exist.");
        UserAccount storage w = userStructs[key];
        w.accountStatus = AccountStatus.restricted;
@@ -204,7 +208,6 @@ contract TaskCreate {
   event workDone(address indexed _from, address indexed _to, uint256 payout);
   
   // defines what tier the contract is. This will correlate to the minimum tier of user required to do work
-  enum ContractTier {cTierOne, cTierTwo, cTierThree}
   
  
   
@@ -220,10 +223,6 @@ contract TaskCreate {
       uint256 balance;      
   }
 
-using HitchensUnorderedKeySetLib for HitchensUnorderedKeySetLib.Set;
-    HitchensUnorderedKeySetLib.Set workSet;
-
-   
 
 
 mapping(address => mapping(bytes32 => bool)) workerPassCheck;
@@ -244,7 +243,7 @@ mapping(address => mapping(bytes32 => uint256)) workEscrow;
   }     
 
 //creates a new contract
-function createContract(bytes32 key, string memory _contractName, uint _taskTier, uint256 _quota, uint amount) public onlyCreators payable{
+function createContract(bytes32 key, string memory _contractName, uint _taskTier, uint256 _quota, uint amount) public onlyCreators goodStatus payable{
     contractSet.insert(key);
     newContract storage w = contractStruct[key];
     uint amountEscrow = amount*10 /100;
@@ -262,12 +261,12 @@ function createContract(bytes32 key, string memory _contractName, uint _taskTier
     emit ContractCreated(msg.sender, contractAmount, contractPayout, UserTier(_taskTier));
    }
 
-function updateContract(bytes32 key, string memory _contractName) public {
+function updateContract(bytes32 key, string memory _contractName) onlyOwner(key) public {
         require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
         newContract storage w = contractStruct[key];
         w.contractName = _contractName;         
     }
-function removeContract(bytes32 key) public {
+function removeContract(bytes32 key) onlyOwner(key) public {
         contractSet.remove(key); // Note that this will fail automatically if the key doesn't exist
         delete contractStruct[key];        
     }
@@ -287,6 +286,7 @@ function removeContract(bytes32 key) public {
 
    mapping(address => bool) public workerPass;
 
+event workDone(address indexed _from, bytes32 indexed _to, uint256 _payout);
 function completeWork(bytes32 key) public onlyWorkers payable {
 	     require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
          newContract storage w = contractStruct[key];
@@ -301,10 +301,11 @@ function completeWork(bytes32 key) public onlyWorkers payable {
 	     workEscrow[msg.sender][key]+= w.payout;
 	     w.balance -= w.payout;
 	     addTaskComplete();
-	     workerPassCheck[msg.sender][key] = false;	     
+	     workerPassCheck[msg.sender][key] = false;
+         emit workDone(msg.sender, key, w.payout);	     
         }
 
-  function reviewWork(bool _passFail, bytes32 key, address _add) onlyCreators public {
+  function reviewWork(bool _passFail, bytes32 key, address _add) onlyOwner(key) onlyCreators public {
         require(workerPassCheck[_add][key]==false, "The worker must not have passed to review");
         require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
         newContract storage w = contractStruct[key];
@@ -339,7 +340,7 @@ function arbitrateWork(bool _passFail, address _workerAdd, bytes32 key ) onlyArb
             emit arbitrationWorking(msg.sender, _workerAdd, key, _passFail);
         }
     }
- function transferEscrow(bytes32 key) public onlyWorkers payable{
+ function transferEscrow(bytes32 key) public payable{
         require(workerPassCheck[msg.sender][key]== true, "Your work must be reviewed");
         require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
         UserAccount storage self = userStructs[msg.sender];
@@ -349,9 +350,9 @@ function arbitrateWork(bool _passFail, address _workerAdd, bytes32 key ) onlyArb
         self.accountBalance+= actBal;
         emit transferEscrowOut(msg.sender, actBal, key);        
     }
-    
 
-function cashOut() onlyWorkers public payable {
+
+function cashOut() public payable {
        uint256 accountBal;
        accountBal= userStructs[msg.sender].accountBalance;
        userStructs[msg.sender].accountBalance -= accountBal;
@@ -359,7 +360,7 @@ function cashOut() onlyWorkers public payable {
        emit userCashOut(msg.sender, accountBal);
     }
  // closes the contract, and empties wallet back to creator
-    function closeContract(bytes32 key) onlyCreators public payable {
+    function closeContract(bytes32 key) onlyCreators onlyOwner(key) public payable {
         require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
         newContract storage w = contractStruct[key];
         require(msg.sender==w.ContractOwner, "only the owner can close the contract");
