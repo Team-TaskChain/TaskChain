@@ -629,10 +629,10 @@ TaskChain.prototype.transferEscrow = function (hash, cb) {
     console.log("this check")
 
     //address of caller
-    var address = window.web3.eth.accounts[0];
+    var key = $("#escrowCashKey").val();    
 
     //upgrades user tier
-    this.instance.transferEscrow({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
+    this.instance.transferEscrow(key, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
         function (error, txHash) {
             if (error) {
                 console.log(error);
@@ -663,7 +663,7 @@ TaskChain.prototype.workCashOut = function (hash, cb) {
     var address = window.web3.eth.accounts[0];
 
     //upgrades user tier
-    this.instance.workCashOut({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
+    this.instance.cashOut({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
         function (error, txHash) {
             if (error) {
                 console.log(error);
@@ -685,36 +685,7 @@ TaskChain.prototype.workCashOut = function (hash, cb) {
     )
 }
 
-//upgrades user to new user tier
-TaskChain.prototype.arbitratorCashOut = function (hash, cb) {
-    var that = this;
-    console.log("this check")
 
-    //address of caller
-    var address = window.web3.eth.accounts[0];
-
-    //upgrades user tier
-    this.instance.arbitratorCashOut({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
-        function (error, txHash) {
-            if (error) {
-                console.log(error);
-            }
-            else {
-                that.waitForReceipt(txHash, function (receipt) {
-                    if (receipt !== null) {
-                        console.log("success");
-                        showStatus("Transaction Completed!")
-                    }
-                    else {
-                        console.log("receipt error");
-                        showStatus("Error in Transaciton")
-
-                    }
-                });
-            }
-        }
-    )
-}
 
 //upgrades user to new user tier
 TaskChain.prototype.checkContractBal = function (hash, cb) {
@@ -744,9 +715,10 @@ TaskChain.prototype.closeContractTag = function (hash, cb) {
 
     //address of caller
     var address = window.web3.eth.accounts[0];
+    var key = $("#closeContractKey").val();  
 
     //upgrades user tier
-    this.instance.closeContract({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
+    this.instance.closeContract(key, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 1000000000, gasLimit: 1000000 },
         function (error, txHash) {
             if (error) {
                 console.log(error);
@@ -755,8 +727,6 @@ TaskChain.prototype.closeContractTag = function (hash, cb) {
                 that.waitForReceipt(txHash, function (receipt) {
                     if (receipt !== null) {
                         console.log("success");
-
-
                         showStatus("Transaction Completed!")
                     }
                     else {
