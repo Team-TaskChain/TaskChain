@@ -4,7 +4,7 @@ import "./HitchensUnorderedKeySetLib.sol";
 
 
 
-contract TaskCreate {
+contract TaskChain {
 
     using HitchensUnorderedAddressSetLib for HitchensUnorderedAddressSetLib.Set;
     HitchensUnorderedAddressSetLib.Set userSet;
@@ -99,7 +99,7 @@ contract TaskCreate {
            
     }
 
-     function updateUser(address key, string memory _userName, UserType _userType) public {
+     function updateUser(address key, string memory _userName, UserType _userType) onlyRootAdmin public {
         require(userSet.exists(key), "Can't update a widget that doesn't exist.");
         UserAccount storage w = userStructs[key];
         w.userName = _userName;        
@@ -155,8 +155,7 @@ contract TaskCreate {
    }
    
    //internal function to test functionality, will be removed before realease
-   function updateUserComplete(uint _tasksCompleted) public {
-       address key = msg.sender;
+   function updateUserComplete(uint _tasksCompleted, address key) onlyRootAdmin public {
        require(userSet.exists(key), "Can't update a widget that doesn't exist.");
        UserAccount storage w = userStructs[key];
        w.tasksCompleted += _tasksCompleted;
@@ -261,7 +260,7 @@ function createContract(bytes32 key, string memory _contractName, uint _taskTier
     emit ContractCreated(msg.sender, contractAmount, contractPayout, UserTier(_taskTier));
    }
 
-function updateContract(bytes32 key, string memory _contractName) onlyOwner(key) public {
+function updateContract(bytes32 key, string memory _contractName) onlyRootAdmin public {
         require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
         newContract storage w = contractStruct[key];
         w.contractName = _contractName;         
