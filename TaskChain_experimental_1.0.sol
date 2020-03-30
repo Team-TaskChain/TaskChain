@@ -200,7 +200,7 @@ contract TaskCreate {
 
   
   event ContractCreated(address indexed _from, uint256 _value, uint256 _payout, UserTier _usertier);
-  event ContractClosed(address indexed _from, uint _bal);
+  event ContractClosed(address indexed _from, uint _bal, bytes32 indexed _contract);
   event workDone(address indexed _from, address indexed _to, uint256 payout);
   
   // defines what tier the contract is. This will correlate to the minimum tier of user required to do work
@@ -223,30 +223,16 @@ contract TaskCreate {
 using HitchensUnorderedKeySetLib for HitchensUnorderedKeySetLib.Set;
     HitchensUnorderedKeySetLib.Set workSet;
 
-    struct workLogStruct {
-        bytes32 contractKey;
-        address workerAddress;
-        uint256 escrowAccount;
-        bool active;        
-    }
+   
 
-mappings(bytes32 => workLogStruct) workLogList;
-
-function newWork(bytes32 key, bytes32 contractKey, address workerAddress, uint256 escrowAmount, bool active) public {
-        workSet.insert(key); // Note that this will fail automatically if the key already exists.
-        workLogStruct storage w = workLogList[key];
-        w.contractKey = contractKey;
-        w.workerAddress = workerAddress;
-        w.escrowAmount = escrowAmount;
-        w.active = active;       
-    }
 
 mapping(address => mapping(bytes32 => bool)) workerPassCheck;
-workLog[] workList;
+mapping(address => mapping(bytes32 => uint256)) workEscrow;
+
 
 //stores all contract info. Each address can only have one open contract at the moment
   mapping(bytes32 => newContract) contractStruct;
-  mapping(address => uint) reserveWallet;
+  
   
   //stores the balance for the contract, seperate from the creators wallet
  
@@ -275,6 +261,7 @@ function createContract(bytes32 key, string memory _contractName, uint _taskTier
     w.payout = contractPayout;    
     emit ContractCreated(msg.sender, contractAmount, contractPayout, UserTier(_taskTier));
    }
+
 function updateContract(bytes32 key, string memory _contractName) public {
         require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
         newContract storage w = contractStruct[key];
@@ -311,7 +298,7 @@ function completeWork(bytes32 key) public onlyWorkers payable {
          else if(userStructs[msg.sender].userTier == UserTier.TierTwo){
              require(w.userTier!=UserTier.TierThree, "user is teir two, not high enough rank");
          }
-	     userStructs[msg.sender].accountEscrow+= w.payout;
+	     workEscrow[msg.sender][key]+= w.payout;
 	     w.balance -= w.payout;
 	     addTaskComplete();
 	     workerPassCheck[msg.sender][key] = false;	     
@@ -334,42 +321,62 @@ function arbitrateWork(bool _passFail, address _workerAdd, bytes32 key ) onlyArb
         newContract storage w = contractStruct[key];
         require(userSet.exists(_workerAdd), "Can't update a widget that doesn't exist.");
         UserAccount storage self = userStructs[msg.sender];
-        UserAccount storage u = userStructs[_workerAdd];
         UserAccount storage root = userStructs[RootAdmin];
         require(workerPassCheck[_workerAdd][key]==false, "The worker must not have passed to arbitrate");
         if (_passFail==true){
             workerPassCheck[_workerAdd][key]=true;
             root.accountBalance-=w.payout;
             w.balance-=2*w.payout;
-            u.accountEscrow+=w.payout;
             self.accountBalance+=2*w.payout;
             emit arbitrationWorking(msg.sender, _workerAdd, key, _passFail);
             }
         else if (_passFail==false) {
             workerPassCheck[_workerAdd][key]=false;
             root.accountBalance -= 2 * w.payout;
-            u.accountEscrow-=w.payout;
+            workEscrow[msg.sender][key]-=w.payout;
             self.accountBalance+=2*w.payout;
             w.balance+= w.payout;
             emit arbitrationWorking(msg.sender, _workerAdd, key, _passFail);
         }
     }
  function transferEscrow(bytes32 key) public onlyWorkers payable{
-        require(workerPassCheck[msg.sender][key]== true, 'Your work must be reviewed');
-        require(userSet.exists(_workerAdd), "Can't update a widget that doesn't exist.");
+        require(workerPassCheck[msg.sender][key]== true, "Your work must be reviewed");
+        require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
         UserAccount storage self = userStructs[msg.sender];
         uint256 actBal;
-        actBal = workerEscrow[msg.sender];
-        workerEscrow[msg.sender]-= actBal;
-        workerWallet[msg.sender]+= actBal;
-        emit transferEscrowOut(msg.sender, actBal);
-        
+        actBal = workEscrow[msg.sender][key];
+        workEscrow[msg.sender][key]-= actBal;
+        self.accountBalance+= actBal;
+        emit transferEscrowOut(msg.sender, actBal, key);        
     }
-event cashOut(address indexed _from, uint256 _bal);
+    
+
+function cashOut() onlyWorkers public payable {
+       uint256 accountBal;
+       accountBal= userStructs[msg.sender].accountBalance;
+       userStructs[msg.sender].accountBalance -= accountBal;
+       msg.sender.transfer(accountBal);
+       emit userCashOut(msg.sender, accountBal);
+    }
+ // closes the contract, and empties wallet back to creator
+    function closeContract(bytes32 key) onlyCreators public payable {
+        require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
+        newContract storage w = contractStruct[key];
+        require(msg.sender==w.ContractOwner, "only the owner can close the contract");
+        uint256 accountBal;
+        accountBal = w.balance;
+        accountBal-=accountBal;
+        w.activeContract = false;
+        msg.sender.transfer(accountBal);
+        removeContract(key);
+        emit ContractClosed(msg.sender, accountBal, key);
+    }
+
+event userCashOut(address indexed _from, uint256 _bal);
 
 
 event arbitrationWorking(address indexed _from, address indexed _to, bytes32 indexed _contract, bool _arbitrateResult);
-event transferEscrowOut(address indexed _from, uint256 _balance);
+event transferEscrowOut(address indexed _from, uint256 _balance, bytes32 key);
 
 
 
