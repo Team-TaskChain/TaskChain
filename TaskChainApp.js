@@ -48,7 +48,7 @@ TaskChain.prototype.createNewUser = function () {
 
 
     //calls new User function, adds to blockchain
-    this.instance.newUser(userName, userType, { from: window.web3.eth.accounts[0], gasLimit: 500000 },
+    this.instance.newUser(userName, userType, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         // If there's an error, log it
         function (error, txHash) {
             if (error) {
@@ -79,7 +79,7 @@ TaskChain.prototype.upgradeUser = function (hash, cb) {
 
     
     //upgrades user tier
-   this.instance.updateUserTier({ from: window.web3.eth.accounts[0], gasLimit: 5000000 },
+   this.instance.updateUserTier({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         function (error, _success) {
             if (error) {
                 console.log(error);
@@ -99,7 +99,7 @@ TaskChain.prototype.createArb = function (hash, cb) {
     //records address of account calling
     var address = window.web3.eth.accounts[0];
 
-    this.instance.appointArbitrator({ from: window.web3.eth.accounts[0], gasLimit: 1000000 },
+    this.instance.appointArbitrator({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         function (error, txHash) {
             if (error) {
                 console.log(error);
@@ -235,7 +235,7 @@ TaskChain.prototype.appAdmin = function () {
 
 
     //appoints admin
-    this.instance.createAdmin(address, { from: window.web3.eth.accounts[0], gasLimit: 500000 },
+    this.instance.createAdmin(address, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -276,7 +276,7 @@ TaskChain.prototype.demAdmin = function () {
 
 
     // gets address, msg.sender, and demotes
-    this.instance.createAdmin(address, { from: window.web3.eth.accounts[0], gasLimit: 500000 },
+    this.instance.createAdmin(address, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -315,7 +315,7 @@ TaskChain.prototype.restrictAccount = function () {
         return;
     }
 
-    this.instance.restrictAccount(address, { from: window.web3.eth.accounts[0], gasLimit: 500000 },
+    this.instance.restrictAccount(address, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -356,7 +356,7 @@ TaskChain.prototype.restoreAccount = function () {
 
 
     // Check the balance from the address 
-    this.instance.restoreAccount(address, { from: window.web3.eth.accounts[0], gasLimit: 500000 },
+    this.instance.restoreAccount(address,{ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -391,25 +391,19 @@ TaskChain.prototype.createContract = function () {
     // Get input values, the address  
     var address = window.web3.eth.accounts[0];
     var contractTitle = $("#contractName").val();
-    var value = $("#msgValue").val();
+    var msgValue = $("#msgValue").val();
     var quota = $("#quota").val();
     var tasktier = $("#taskTier").val();
-    var newConcat = address.concat(contractTitle);   
-    console.log("Contract Title", contractTitle);
-    console.log("value: ", value);
-    console.log("quota: ", quota);
-    console.log("tasktier: ", tasktier);
-    console.log("Concat", newConcat);       
     let newHex = ethers.utils.formatBytes32String(contractTitle);
-    let randomHex = ethers.utils.bigNumberify(ethers.utils.randomBytes(32));
-    randomNumber = randomHex.toHexString();
-  
-    console.log("Bytes", newHex);
-    console.log("random", randomHex);
-    console.log("random2", randomNumber);
-
-    // Check the balance from the address 
-    this.instance.createContract(newHex, contractTitle, tasktier, quota, value, { from: window.web3.eth.accounts[0], value: value, gasLimit: 750000 },
+    console.log("address: ", address); 
+    console.log("Key: ", newHex);
+    console.log("Contract Title", contractTitle);
+    console.log("tasktier: ", tasktier);    
+    console.log("quota: ", quota);
+    console.log("value: ", msgValue); 
+    
+        // Check the balance from the address 
+    this.instance.createContract(newHex, contractTitle, tasktier, quota, msgValue, { from: window.web3.eth.accounts[0], value: msgValue, gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -498,7 +492,7 @@ TaskChain.prototype.completeWork = function () {
     console.log(address);
 
     // Check the balance from the address 
-    this.instance.completeWork(address, { from: window.web3.eth.accounts[0], gasLimit: 500000 },
+    this.instance.completeWork(address, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -549,7 +543,7 @@ TaskChain.prototype.reviewWork = function () {
     console.log(address);
 
     // Check the balance from the address 
-    this.instance.reviewWork(passFailVal, key, address,{ from: window.web3.eth.accounts[0], gasLimit: 500000000 },
+    this.instance.reviewWork(passFailVal, key, address,{ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -596,7 +590,7 @@ TaskChain.prototype.arbitrateWork = function () {
     console.log(address);
 
     // Check the balance from the address 
-    this.instance.arbitrateWork(passFail, workerAddress, address, { from: window.web3.eth.accounts[0], gasLimit: 500000 },
+    this.instance.arbitrateWork(passFail, workerAddress, address, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -632,7 +626,7 @@ TaskChain.prototype.transferEscrow = function (hash, cb) {
     var key = $("#escrowCashKey").val();    
 
     //upgrades user tier
-    this.instance.transferEscrow(key, { from: window.web3.eth.accounts[0], gasLimit: 5000000 },
+    this.instance.transferEscrow(key, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         function (error, txHash) {
             if (error) {
                 console.log(error);
@@ -663,7 +657,7 @@ TaskChain.prototype.workCashOut = function (hash, cb) {
     var address = window.web3.eth.accounts[0];
 
     //upgrades user tier
-    this.instance.cashOut({ from: window.web3.eth.accounts[0], gasLimit: 5000000 },
+    this.instance.cashOut({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         function (error, txHash) {
             if (error) {
                 console.log(error);
@@ -696,7 +690,7 @@ TaskChain.prototype.checkContractBal = function (hash, cb) {
     var address = window.web3.eth.accounts[0];
 
     //upgrades user tier
-    this.instance.checkContractBal({ from: window.web3.eth.accounts[0], gasLimit: 5000000 },
+    this.instance.checkContractBal({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         function (error, balance) {
             if (error) {
                 console.log(error);
@@ -718,7 +712,7 @@ TaskChain.prototype.closeContractTag = function (hash, cb) {
     var key = $("#closeContractKey").val();  
 
     //upgrades user tier
-    this.instance.closeContract(key, { from: window.web3.eth.accounts[0], gasLimit: 5000000 },
+    this.instance.closeContract(key,{ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         function (error, txHash) {
             if (error) {
                 console.log(error);
