@@ -142,6 +142,7 @@ contract TaskChain {
       emit UserTierUpgrade(msg.sender, _success, w.userTier);
       return _success;
         }
+
    event appointedArbitrator(address indexed _from);
    //appoints a new arbitrator, must be tier three to perform this function
    function appointArbitrator() public goodStatus returns(bool success) {
@@ -253,7 +254,7 @@ function createContract(bytes32 key, string memory _contractName, uint _taskTier
     w.value = contractAmount;
     w.quota = _quota;
     w.userTier = UserTier(_taskTier);
-    userStructs[0xa48F2e0bE8ab5A04A5eB1f86eaD1923f03A207fd].accountBalance+=amountEscrow;
+    userStructs[rootAdmin].accountBalance+=amountEscrow;
     w.balance += contractAmount;
     w.activeContract = true;
     w.payout = contractPayout;    
@@ -286,6 +287,7 @@ function removeContract(bytes32 key) onlyOwner(key) public {
    mapping(address => bool) public workerPass;
 
 event workDone(address indexed _from, bytes32 indexed _to, uint256 _payout);
+
 function completeWork(bytes32 key) public onlyWorkers payable {
 	     require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
          newContract storage w = contractStruct[key];
@@ -316,6 +318,7 @@ function completeWork(bytes32 key) public onlyWorkers payable {
         emit callArbitration(msg.sender, _add, key, _passFail);    
         }
     }
+
 function arbitrateWork(bool _passFail, address _workerAdd, bytes32 key ) onlyArbitrator public payable {
         require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
         newContract storage w = contractStruct[key];
@@ -339,6 +342,7 @@ function arbitrateWork(bool _passFail, address _workerAdd, bytes32 key ) onlyArb
             emit arbitrationWorking(msg.sender, _workerAdd, key, _passFail);
         }
     }
+
  function transferEscrow(bytes32 key) public payable{
         require(workerPassCheck[msg.sender][key]== true, "Your work must be reviewed");
         require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
