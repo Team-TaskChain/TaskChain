@@ -78,6 +78,7 @@ contract TaskChain {
         uint256 accountEscrow;
     }
     
+    
     //stores the address for all useraccounts
     mapping(address => UserAccount) public userStructs;
     UserAccount[] public userAccounts;
@@ -254,7 +255,7 @@ function createContract(bytes32 key, string memory _contractName, uint _taskTier
     w.value = contractAmount;
     w.quota = _quota;
     w.userTier = UserTier(_taskTier);
-    userStructs[rootAdmin].accountBalance+=amountEscrow;
+    userStructs[RootAdmin].accountBalance+=amountEscrow;
     w.balance += contractAmount;
     w.activeContract = true;
     w.payout = contractPayout;    
