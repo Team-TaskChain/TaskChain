@@ -66,20 +66,87 @@ contract TaskChain {
         _;
     }
     
-    event NewUserRegistered (address indexed _from, string _username, UserType _userType);
-    event UserTierUpgrade (address indexed _from, string _success, UserTier _userTier);
-    event userCashOut(address indexed _from, uint256 _bal);
-    event arbitrationWorking(address indexed _from, address indexed _to, bytes32 indexed _contract, bool _arbitrateResult);
-    event transferEscrowOut(address indexed _from, uint256 _balance, bytes32 key);
-    event callArbitration(address indexed _from, address indexed _to, bytes32 indexed _fromKey, bool _passFail);
-    event ContractCreated(address indexed _from, uint256 _value, uint256 _payout, UserTier _usertier);
-    event ContractClosed(address indexed _from, uint _bal, bytes32 indexed _contract);
-    event workDone(address indexed _from, bytes32 indexed _to, uint256 _payout);
-    event newAdmin(address indexed _from, address indexed _to);
-    event removeAdmin(address indexed _from, address indexed _to);
-    event newRestrictedAccount(address indexed _from, address indexed _to);
-    event removeRestrictAccount(address indexed _from, address indexed _to);
-    event appointedArbitrator(address indexed _from);
+    event NewUserRegistered (
+        address indexed _from, 
+        string _username, 
+        UserType _userType
+    );
+
+    event UserTierUpgrade (
+        address indexed _from, 
+        string _success, 
+        UserTier _userTier
+    );
+
+    event userCashOut(
+        address indexed _from, 
+        uint256 _bal
+    );
+
+    event arbitrationWorking (
+        address indexed _from, 
+        address indexed _to, 
+        bytes32 indexed _contract, 
+        bool _arbitrateResult
+    );
+
+    event transferEscrowOut (
+        address indexed _from, 
+        uint256 _balance, 
+        bytes32 key
+    );
+
+    event callArbitration (
+        address indexed _from, 
+        address indexed _to, 
+        bytes32 indexed _fromKey, 
+        bool _passFail
+    );
+
+    event ContractCreated (
+        bytes32 indexed _key,
+        string _contractName,
+        address indexed _from, 
+        uint256 _value, 
+        uint256 _payout, 
+        UserTier _usertier
+    );
+
+    event ContractClosed (
+        address indexed _from, 
+        uint _bal, 
+        bytes32 indexed _contract
+    );
+
+    event workDone (
+        address indexed _from, 
+        bytes32 indexed _to, 
+        uint256 _payout
+    );
+
+    event newAdmin (
+        address indexed _from, 
+        address indexed _to
+    );
+
+    event removeAdmin (
+        address indexed _from, 
+        address indexed _to
+    );
+
+    event newRestrictedAccount (
+        address indexed _from, 
+        address indexed _to
+    );
+
+    event removeRestrictAccount (
+        address indexed _from,
+         address indexed _to
+    );
+
+    event appointedArbitrator(
+        address indexed _from
+    );
 
     /*the base structure for all user accouts. isUsed is to restrict users 
     to one account per address, which helps presever status and rank*/
@@ -125,8 +192,7 @@ contract TaskChain {
         w.isAdmin = false; 
         w.accountBalance = 0;
         w.accountEscrow =0;
-        emit NewUserRegistered(msg.sender, userName, UserType(_index));
-           
+        emit NewUserRegistered(msg.sender, userName, UserType(_index));           
     }
 
     // updates a user, restricted to rootAdmin for testing purposes
@@ -285,6 +351,8 @@ contract TaskChain {
         w.payout = contractPayout; 
         _idNumber = key; 
         emit ContractCreated (
+            key,
+            _contractName,
             msg.sender, 
             contractAmount, 
             contractPayout, 
