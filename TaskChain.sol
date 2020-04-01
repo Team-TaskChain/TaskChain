@@ -211,7 +211,7 @@ contract TaskChain {
             string memory _userName, 
             UserTier _userTier, 
             UserType _userType,
-             uint256 _tasksCompleted, 
+            uint256 _tasksCompleted, 
             AccountStatus _accountStatus, 
             bool _isAdmin, 
             uint256 _accountBalance, 
@@ -227,8 +227,8 @@ contract TaskChain {
             w.tasksCompleted, 
             w.accountStatus, 
             w.isAdmin, 
-            w.accountBalance, w
-            .accountEscrow
+            w.accountBalance, 
+            w.accountEscrow
         );
     }
 
