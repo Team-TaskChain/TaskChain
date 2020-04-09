@@ -948,7 +948,7 @@
             module.exports = data;
         })((typeof(module) === "undefined" ? {} : module), Contracts);
 
-        // The object 'Contracts' will be injected here, which contains all data for all contracts, keyed on contract name:
+// The object 'Contracts' will be injected here, which contains all data for all contracts, keyed on contract name:
 // Contracts['HelloWorld'] = {
 //  abi: [],
 //  address: "0x..",
@@ -976,23 +976,12 @@ TaskChain.prototype.init = function () {
         (window.web3 && window.web3.currentProvider) ||
         new Web3.providers.HttpProvider(this.Contract.endpoint));
 
-        //Enable the Ethereum Package   
-    window.ethereum.enable();
-    
-    //Output console information
-    console.log("enabled ethereum");
-    console.log("web3::::");
-    console.log(this.web3);
-
-
     // Create the contract interface using the ABI provided in the configuration.
     var contract_interface = this.web3.eth.contract(this.Contract.abi);
 
     // Create the contract instance for the specific address provided in the configuration.
     this.instance = contract_interface.at(this.Contract.address);
 };
-
-
 
 //create new User
 TaskChain.prototype.createNewUser = function () {
@@ -1004,10 +993,13 @@ TaskChain.prototype.createNewUser = function () {
     console.log("Username:", userName);
     console.log("Usertype:", userType);
 
-
-
     //calls new User function, adds to blockchain
-    this.instance.newUser(userName, userType, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
+    this.instance.newUser(
+        userName,
+        userType,
+        {
+            from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000
+        },
         // If there's an error, log it
         function (error, txHash) {
             if (error) {
@@ -1035,17 +1027,16 @@ TaskChain.prototype.createNewUser = function () {
 TaskChain.prototype.upgradeUser = function (hash, cb) {
     var that = this;
     console.log("this check")
-
-    
     //upgrades user tier
-   this.instance.updateUserTier({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
+    this.instance.updateUserTier(
+        { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         function (error, _success) {
             if (error) {
                 console.log(error);
             }
             else {
                 console.log("SUCCESS!", _success);
-                showStatus("Transaction Complete!")
+                showStatus("Transaction Complete!");
             }
         })
 }
@@ -1058,7 +1049,8 @@ TaskChain.prototype.createArb = function (hash, cb) {
     //records address of account calling
     var address = window.web3.eth.accounts[0];
 
-    this.instance.appointArbitrator({ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
+    this.instance.appointArbitrator(
+        { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         function (error, txHash) {
             if (error) {
                 console.log(error);
@@ -1081,8 +1073,6 @@ TaskChain.prototype.createArb = function (hash, cb) {
     )
 }
 
-
-
 // Waits for receipt of transaction
 TaskChain.prototype.waitForReceipt = function (hash, cb) {
     var that = this;
@@ -1099,18 +1089,14 @@ TaskChain.prototype.waitForReceipt = function (hash, cb) {
                 console.log("receipt1");
                 cb(receipt);
                 console.log("receipt2");
-
             }
         } else {
             // Try again in 2 second
             console.log("receipt2");
-            window.setTimeout(function () {
-                that.waitForReceipt(hash, cb);
-            }, 2000);
+            window.setTimeout(function () { that.waitForReceipt(hash, cb); }, 2000);
         }
     });
 }
-
 
 //calls user structure
 TaskChain.prototype.isUser = function (hash, cb) {
@@ -1122,10 +1108,10 @@ TaskChain.prototype.isUser = function (hash, cb) {
         showStatus("Please enter a valid address");
         return;
     }
+    console.log("UserAddress", userAddress);
 
-    console.log(userAddress);
-
-    this.instance.getUser(userAddress,
+    this.instance.getUser(
+        userAddress,
         function (error, userStruct) {
             if (error) {
                 console.log(error);
@@ -1134,20 +1120,19 @@ TaskChain.prototype.isUser = function (hash, cb) {
                 console.log(userStruct);
                 $("#message").text(userStruct);
             }
-        })
+        }
+    )
 }
 
 //calls user structure
 TaskChain.prototype.getUserIndex = function (hash, cb) {
     var that = this;
-
     // Get input values
     var userIndex = $("#userIndex").val();
-    
+    console.log("userIndex: ", userIndex);
 
-    console.log(userIndex);
-
-    this.instance.getUserIndex(userIndex,
+    this.instance.getUserIndex(
+        userIndex,
         function (error, userAddress) {
             if (error) {
                 console.log(error);
@@ -1156,16 +1141,14 @@ TaskChain.prototype.getUserIndex = function (hash, cb) {
                 console.log(userAddress);
                 $("#userAddressRetrieve").text(userAddress);
             }
-        })
+        }
+    )
 }
 
 //calls user structure
 TaskChain.prototype.getUserCount = function (hash, cb) {
     var that = this;
     console.log("part1: Pre Count")
-
-
-
     this.instance.getUserCount(
         function (error, userCount) {
             if (error) {
@@ -1175,37 +1158,35 @@ TaskChain.prototype.getUserCount = function (hash, cb) {
                 console.log(userCount);
                 $("#userNumberRetrieve").text(userCount);
             }
-        })
+        }
+    )
 }
-
 
 // creates new admin user, only called by rootadmin
 TaskChain.prototype.appAdmin = function () {
     var that = this;
-    console.log("this check")
-
+    console.log("PreLoadCheck")
     // Get input values, the address
     var address = $("#adminAddress").val();
-    console.log(address);
+    console.log("address: ", address);
     if (!isValidAddress(address)) {
         showStatus("Please enter a valid address");
         return;
     }
-
-
     //appoints admin
-    this.instance.createAdmin(address, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
-        console.log("error1"),
+    this.instance.createAdmin(
+        address,
+        { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
+        console.log("Load1"),
         function (error, txHash) {
-            console.log("erorrrr")
+            console.log("Error Load")
             if (error) {
-                console.log("error2");
-                console.log(error);
+                console.log("Error: ", error);
             }
             else {
-                console.log("elsechain");
+                console.log("Else1");
                 that.waitForReceipt(txHash, function (receipt) {
-                    console.log("error3");
+                    console.log("Reciept Load");
                     if (receipt.status == 1) {
                         console.log("success");
                         showStatus("Transaction Complete");
@@ -1231,29 +1212,29 @@ TaskChain.prototype.demAdmin = function () {
         showStatus("Please enter a valid address");
         return;
     }
-    console.log(address);
+    console.log("address: ", address);
 
 
     // gets address, msg.sender, and demotes
-    this.instance.createAdmin(address, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
-        console.log("error1"),
+    this.instance.createAdmin(
+        address,
+        { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
+        console.log("Preload"),
         function (error, txHash) {
-            console.log("erorrrr")
+            console.log("Load1")
             if (error) {
-                console.log("error2");
-                console.log(error);
+                console.log("Error: ", error);
             }
             else {
-                console.log("elsechain");
+                console.log("Load2");
                 that.waitForReceipt(txHash, function (receipt) {
-                    console.log("error3");
+                    console.log("Reciept");
                     if (receipt.status == 1) {
                         console.log("success");
                         showStatus("Transaction Complete");
                     }
                     else {
                         console.log("receipt error");
-
                     }
                 });
             }
@@ -1264,7 +1245,7 @@ TaskChain.prototype.demAdmin = function () {
 //restricts accounts, called by admins
 TaskChain.prototype.restrictAccount = function () {
     var that = this;
-    console.log("this check")
+    console.log("Preload")
 
     // Get input values, the address
     var address = $("#restrictAccountAddress").val();
@@ -1274,18 +1255,19 @@ TaskChain.prototype.restrictAccount = function () {
         return;
     }
 
-    this.instance.restrictAccount(address, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
-        console.log("error1"),
+    this.instance.restrictAccount(
+        address,
+        { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
+        console.log("Preload"),
         function (error, txHash) {
-            console.log("erorrrr")
+            console.log("Load1")
             if (error) {
-                console.log("error2");
-                console.log(error);
+                console.log("Error: ", error);
             }
             else {
-                console.log("elsechain");
+                console.log("Load2");
                 that.waitForReceipt(txHash, function (receipt) {
-                    console.log("error3");
+                    console.log("Reciept");
                     if (receipt.status == 1) {
                         console.log("success");
                         showStatus("Transaction Complete");
@@ -1303,7 +1285,7 @@ TaskChain.prototype.restrictAccount = function () {
 //restores resctricted account
 TaskChain.prototype.restoreAccount = function () {
     var that = this;
-    console.log("this check")
+    console.log("Preload")
 
     // Get input values, the address
     var address = $("#restrictAccountAddress").val();
@@ -1311,22 +1293,22 @@ TaskChain.prototype.restoreAccount = function () {
         showStatus("Please enter a valid address");
         return;
     }
-    console.log(address);
-
+    console.log("address: ", address);
 
     // Check the balance from the address 
-    this.instance.restoreAccount(address,{ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
-        console.log("error1"),
+    this.instance.restoreAccount(
+        address,
+        { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
+        console.log("Load1"),
         function (error, txHash) {
-            console.log("erorrrr")
+            console.log("Load2")
             if (error) {
-                console.log("error2");
-                console.log(error);
+                console.log("Error: ", error);
             }
             else {
-                console.log("elsechain");
+                console.log("Load3");
                 that.waitForReceipt(txHash, function (receipt) {
-                    console.log("error3");
+                    console.log("Reciept");
                     if (receipt.status == 1) {
                         console.log("success");
                         showStatus("Transaction Complete");
@@ -1344,9 +1326,6 @@ TaskChain.prototype.restoreAccount = function () {
 TaskChain.prototype.createContract = function () {
     var that = this;
     console.log("this check")
-
-
-
     // Get input values, the address  
     var address = window.web3.eth.accounts[0];
     var contractTitle = $("#contractName").val();
@@ -1354,15 +1333,21 @@ TaskChain.prototype.createContract = function () {
     var quota = $("#quota").val();
     var tasktier = $("#taskTier").val();
     let newHex = ethers.utils.formatBytes32String(contractTitle);
-    console.log("address: ", address); 
+    console.log("address: ", address);
     console.log("Key: ", newHex);
     console.log("Contract Title", contractTitle);
-    console.log("tasktier: ", tasktier);    
+    console.log("tasktier: ", tasktier);
     console.log("quota: ", quota);
-    console.log("value: ", msgValue); 
-    
-        // Check the balance from the address 
-    this.instance.createContract(newHex, contractTitle, tasktier, quota, msgValue, { from: window.web3.eth.accounts[0], value: msgValue, gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
+    console.log("value: ", msgValue);
+
+    // Check the balance from the address 
+    this.instance.createContract(
+        newHex,
+        contractTitle,
+        tasktier,
+        quota,
+        msgValue,
+        { from: window.web3.eth.accounts[0], value: msgValue, gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -1399,7 +1384,7 @@ TaskChain.prototype.getContract = function (hash, cb) {
 
     // Get input values
     var key = $("#contractKey").val();
-    
+
     console.log("contract key: ", key);
 
     this.instance.getContract(key,
@@ -1422,7 +1407,7 @@ TaskChain.prototype.getContractAtIndex = function (hash, cb) {
 
     // Get input values
     var contractIndex = $("#contractIndex").val();
-    
+
     console.log("contract key: ", contractIndex);
 
     this.instance.getContractAtIndex(contractIndex,
@@ -1445,13 +1430,15 @@ TaskChain.prototype.completeWork = function () {
 
     // Get input values, the address
     var address = $("#completeWorkAddress").val();
-    var newAddress = { from: window.web3.eth.accounts[0]};
+    var newAddress = { from: window.web3.eth.accounts[0] };
     console.log("sender addrewss", newAddress);
-   
+
     console.log(address);
 
     // Check the balance from the address 
-    this.instance.completeWork(address, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
+    this.instance.completeWork(
+        address,
+        { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -1485,15 +1472,15 @@ TaskChain.prototype.reviewWork = function () {
 
     // Get input values, the address
     var address = $("#reviewAddress").val();
-    var key =  $("#contractKeyReview").val();
+    var key = $("#contractKeyReview").val();
     var passFailVal = $("#reviewPassFail").val();
     console.log("boolValue", passFailVal);
 
-    
+
     console.log("address", address);
     console.log("key", key);
     console.log("passFail", passFailVal);
-    
+
 
     if (!isValidAddress(address)) {
         showStatus("Please enter a valid address");
@@ -1502,7 +1489,7 @@ TaskChain.prototype.reviewWork = function () {
     console.log(address);
 
     // Check the balance from the address 
-    this.instance.reviewWork(passFailVal, key, address,{ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
+    this.instance.reviewWork(passFailVal, key, address, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         console.log("error1"),
         function (error, txHash) {
             console.log("erorrrr")
@@ -1541,7 +1528,7 @@ TaskChain.prototype.arbitrateWork = function () {
     var workerAddress = $("#workerArbAdd").val();
     var passFail = $("#arbitrateWork").val();
 
-   
+
     if (!isValidAddress(workerAddress)) {
         showStatus("Please enter a valid address");
         return;
@@ -1582,7 +1569,7 @@ TaskChain.prototype.transferEscrow = function (hash, cb) {
     console.log("this check")
 
     //address of caller
-    var key = $("#escrowCashKey").val();    
+    var key = $("#escrowCashKey").val();
 
     //upgrades user tier
     this.instance.transferEscrow(key, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
@@ -1598,7 +1585,7 @@ TaskChain.prototype.transferEscrow = function (hash, cb) {
                     }
                     else {
                         console.log("receipt error");
-                        showStatus("Error in Transaciton")
+                        showStatus("Error in Transaction")
 
                     }
                 });
@@ -1629,8 +1616,7 @@ TaskChain.prototype.workCashOut = function (hash, cb) {
                     }
                     else {
                         console.log("receipt error");
-                        showStatus("Error in Transaciton")
-
+                        showStatus("Error in Transaction")
                     }
                 });
             }
@@ -1668,10 +1654,10 @@ TaskChain.prototype.closeContractTag = function (hash, cb) {
 
     //address of caller
     var address = window.web3.eth.accounts[0];
-    var key = $("#closeContractKey").val();  
+    var key = $("#closeContractKey").val();
 
     //upgrades user tier
-    this.instance.closeContract(key,{ from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
+    this.instance.closeContract(key, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
         function (error, txHash) {
             if (error) {
                 console.log(error);
@@ -1684,13 +1670,35 @@ TaskChain.prototype.closeContractTag = function (hash, cb) {
                     }
                     else {
                         console.log("receipt error");
-                        showStatus("Error in Transaciton")
-
+                        showStatus("Error in Transaction")
                     }
                 });
             }
         }
     )
+}
+
+//upgrades user to new user tier
+TaskChain.prototype.updateUserComplete = function (hash, cb) {
+    var that = this;
+    console.log("this check")
+
+    //address of caller
+    var address = $("#userIdTaskAdd").val();
+    var addNumber = $("#addTaskNumber").val();
+
+    //upgrades user tier
+    this.instance.updateUserComplete(addNumber, address, { from: window.web3.eth.accounts[0], gas: 1000000, gasPrice: 100000, gasLimit: 100000 },
+        function (error, balance) {
+            if (error) {
+                console.log(error);
+                showStatus("Error!");
+            }
+            else {         
+                console.log("balance");
+                showStatus("Done!");
+            }
+        })
 }
 
 // Check if it has the basic requirements of an address
@@ -1725,15 +1733,11 @@ TaskChain.prototype.bindButtons = function () {
         console.log('UserClick')
     });
 
-     $(document).on("click", "#getUserNumberBtn", function () {
+    $(document).on("click", "#getUserNumberBtn", function () {
         console.log('usertryClick')
         that.getUserCount();
         console.log('UserClick')
     });
-
-    
-
-    
 
     $(document).on("click", "#updateUserTier", function () {
         console.log('usertryClick')
@@ -1777,15 +1781,12 @@ TaskChain.prototype.bindButtons = function () {
         console.log('UserClick')
     });
 
-    
+
     $(document).on("click", "#getContractAtIndex", function () {
         console.log('usertryClickAdmin')
         that.getContractAtIndex();
         console.log('UserClick')
     });
-
-
-    
 
     $(document).on("click", "#completeWork", function () {
         console.log('usertryClickAdmin')
@@ -1805,11 +1806,11 @@ TaskChain.prototype.bindButtons = function () {
         console.log('UserClick')
     });
 
-      $(document).on("click", "#reviewWork", function () {
+    $(document).on("click", "#reviewWork", function () {
         console.log('usertryClickAdmin')
         that.reviewWork();
         console.log('UserClick')
-    });    
+    });
 
     $(document).on("click", "#workCashOut", function () {
         console.log('usertryClickAdmin')
@@ -1835,6 +1836,14 @@ TaskChain.prototype.bindButtons = function () {
         console.log('UserClick')
     });
 
+    $(document).on("click", "#addTaskBtn", function () {
+        console.log('addTaskBtn');
+        that.updateUserComplete();
+        console.log('UserClick')
+    });
+
+    
+
 }
 
 function showStatus(text) {
@@ -1854,10 +1863,6 @@ $(document).ready(function () {
     task.onReady();
 });
 
-
-
-
-
     </script>
 
     <!-- The app.css contents will be substituted in below -->
@@ -1869,9 +1874,7 @@ $(document).ready(function () {
         h2,
         h3,
         h4,
-        h5 {
-            font-family: "Raleway", sans-serif
-        }
+        h5 {font-family: "Raleway", sans-serif}
     </style>
 
 <body class="w3-light-grey">
@@ -1890,40 +1893,17 @@ $(document).ready(function () {
         </header>
         <div class="w3-bar-block">
             <a href="#" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Home</a>
-            <a href="#newUserInputTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">New User</a>
-            <a href="#upgradeTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Upgrade User</a>
-            <a href="#arbitratorTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Create
-                Arbitrator</a>
-            <a href="#createAdminTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Appoint
-                Admin</a>
-            <a href="#adminControlTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Admin Access
-                Control</a>
-            <a href="#createContractTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Create
-                Contract</a>
-            <a href="#performWorkTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Perform Work</a>
-            <a href="#reviewWorkTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Review Work</a>
-            <a href="#arbitrateWorkTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Arbitrate
-                Work</a>
-            <a href="#transferEscrowTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Transfer
-                Escrow</a>
-            <a href="#cashOutWorkerTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Cash Out
-                (Worker)</a>
-            <a href="#cashOutArbitratorTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Cash Out
-                (Arbitrator)</a>
-            <a href="#checkContractBalTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Check
-                Contract Balance</a>
-            <a href="#closeContractTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Close
-                Contract</a>
-
+            <a href="#newUserInputTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">New User and Adminstrative Section</a>            
+            <a href="#createContractTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">TaskCreate Section</a>                   
+            <a href="#closeContractTag" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">RootAdmin Special Functions</a>
         </div>
-    </nav>
+    </nav>    
     <div class="w3-main" style="margin-left:340px;margin-right:40px">
 
         <h1>Welcome to TaskChain </h1><br>
         <div class="message"></div>
         <h2><b>New User and Adminstrative Section</b></h2>
         <hr style="width:50px;border:5px solid red" class="w3-round">
-
         <div class="w3-content">
             <div></div>
             <h3 id="newUserInputTag">Please Input User Name and Type</h3>
@@ -1937,38 +1917,41 @@ $(document).ready(function () {
             </form>
             <button class="w3-ripple w3-white w3-hover-indigo" id="createUser">Create User</button>
         </div><br><br>
+
         <div class="w3-content">
             <h3 id="getUserCountTag">Get User at Address</h3>
             <label for="userCheckAddress">Address:</label>
             <input type="text" id="userCheckAddress" placeholder="address"><br>
             <button class="btn" id="getUserCountBtn">Get User</button>
             <h4 class="text message">User Struct:&nbsp;<span id="message"></span></h4>
-            <h4 class="text message">Key: Username, User Tier, userType, tasksCompleted, account status, admin status, account balance, account escrow</h4>
+            <h4 class="text message">Key: Username, User Tier, userType, tasksCompleted, account status, admin status,
+                account balance, account escrow</h4>
         </div><br><br>
 
         <div class="w3-content">
-            <h3 id="getUserAtIndexTag">User Index</h3>  
+            <h3 id="getUserAtIndexTag">User Index</h3>
             <label for="userIndex">Get User at Index</label><br>
             <input type="number" id="userIndex" placeholder="Index"><br>
-           <button class="btn" id="getUserAtIndexBtn">Get User(Index)</button>            
-             <h4 class="text message">User Address:&nbsp;<span id="userAddressRetrieve"></span></h4>
+            <button class="btn" id="getUserAtIndexBtn">Get User(Index)</button>
+            <h4 class="text message">User Address:&nbsp;<span id="userAddressRetrieve"></span></h4>
         </div><br><br>
-
 
         <div class="w3-content">
             <h3 id="getUserNumberTag">Get Number of Users</h3>
             <button class="btn" id="getUserNumberBtn">Get Number</button>
-             <h4 class="text message">Number of Users:&nbsp;<span id="userNumberRetrieve"></span></h4>
+            <h4 class="text message">Number of Users:&nbsp;<span id="userNumberRetrieve"></span></h4>
         </div><br><br>
 
         <div class="w3-content">
             <h3 id="upgradeTag">Upgrade User to New Tier</h3>
             <button class="btn" id="updateUserTier">Upgrade User</button>
         </div><br><br>
+
         <div class="w3-content">
             <h3 id="arbitratorTag">Create Arbitrator</h3>
             <button class="btn" id="appointArbitrator">Request Arbitrator Status</button>
         </div><br><br>
+
         <div class="w3-content">
             <h3 id="createAdminTag">Appoint Admin</h3>
             <label for="adminAddress">Admin Address:</label>
@@ -1976,6 +1959,7 @@ $(document).ready(function () {
             <button class="btn" id="createAdmin">Upgrade to Admin</button>
             <button class="btn" id="demoteAdmin">Demote Admin</button>
         </div><br><br>
+
         <div class="w3-content">
             <h3 id="adminControlTag">Admin Access Control</h3>
             <label for="restrictAccountAddress">Address to be Changed:</label>
@@ -1983,9 +1967,9 @@ $(document).ready(function () {
             <button class="btn" id="restrictAccount">Restrict Account</button>
             <button class="btn" id="restoreAccount">Restore Account</button>
         </div><br><br>
+
         <h2><b>TaskCreate Section</b></h2>
         <hr style="width:50px;border:5px solid red" class="w3-round">
-
         <div class="w3-content">
             <h3 id="createContractTag">Create New Contract</h3>
             <label for="contractName">Contract Title:</label><br>
@@ -2001,32 +1985,30 @@ $(document).ready(function () {
                     <option value=2>Tier Three</option>
                 </select>
             </form>
-
             <button class="btn" id="createContract">Create Contract</button>
         </div><br><br>
+
         <div class="w3-content">
             <h3 id="getContractTag">Review Contract</h3>
             <label for="contractKey">Input Contract Key</label><br>
             <input type="text" id="contractKey" placeholder="Key"></br>
             <button class="btn" id="getContractAtKey">Get Contract(Key)</button><br>
             <h4 class="text message">Contract:&nbsp;<span id="ContractInfoRetrieve"></span></h4>
-           </div><br><br>
-        <div class="w3-content">
-            <h3 id="getContractAtIndexTag">Contract Index</h3>  
-            <label for="contractIndex">Get Contract at Index</label><br>
-            <input type="number" id="contractIndex" placeholder="Index"><br>
-           <button class="btn" id="getContractAtIndex">Get Contract(Index)</button>            
-             <h4 class="text message">Contract Key:&nbsp;<span id="ContractKeyRetrieve"></span></h4>
-
-
-
         </div><br><br>
 
-        <div class="w3-content">            
+        <div class="w3-content">
+            <h3 id="getContractAtIndexTag">Contract Index</h3>
+            <label for="contractIndex">Get Contract at Index</label><br>
+            <input type="number" id="contractIndex" placeholder="Index"><br>
+            <button class="btn" id="getContractAtIndex">Get Contract(Index)</button>
+            <h4 class="text message">Contract Key:&nbsp;<span id="ContractKeyRetrieve"></span></h4>
+        </div><br><br>
+
+        <div class="w3-content">
             <h3 id="performWorkTag">Perform Work</h3>
             <label for="completeWorkAddress">Task Key:</label>
             <input type="text" id="completeWorkAddress" placeholder="Key"><br>
-            <button class="btn" id="completeWork">Complete Work</button>            
+            <button class="btn" id="completeWork">Complete Work</button>
         </div><br><br>
 
         <div class="w3-content">
@@ -2043,6 +2025,7 @@ $(document).ready(function () {
             </form><br>
             <button class="btn" id="reviewWork">Complete Review</button>
         </div><br><br>
+
         <div class="w3-content">
             <h3 id="arbitrateWorkTag">Arbitrate Work</h3>
             <label for="contractArbAdd">Contract Key: </label>
@@ -2057,9 +2040,10 @@ $(document).ready(function () {
             </form><br>
             <button class="btn" id="arbitrateWork">Complete Arbitration</button>
         </div><br><br>
+
         <div class="w3-content">
             <h3 id="transferEscrowTag">Transfer from Escrow(Workers)</h3>
-            <label for="escrowCashKey">Contract Key:</label>            
+            <label for="escrowCashKey">Contract Key:</label>
             <input type="text" id="escrowCashKey" placeholder="Key">
             <button class="btn" id="transferEscrow">Transfer to Account</button>
         </div><br><br>
@@ -2067,24 +2051,29 @@ $(document).ready(function () {
         <div class="w3-content">
             <h3 id="cashOutWorkerTag">Cash Out</h3>
             <button class="btn" id="workCashOut">Cash out Balance</button>
-        </div><br><br>       
-        
+        </div><br><br>
 
         <div class="w3-content">
             <h3 id="closeContractTag">Close Contract(Creator)</h3>
-             <label for="closeContractKey">Contract Key: </label>
+            <label for="closeContractKey">Contract Key: </label>
             <input type="text" id="closeContractKey" placeholder="Key"><br>
             <button class="btn" id="closeContractButton">Close Contract</button>
-            
         </div><br><br>
+        <div>
+        <h2><b>RootAdmin Special Functions</b></h2>
+        <hr style="width:50px;border:5px solid red" class="w3-round">
+        </div><br>       
 
-   
-
-
+        <div class="w3-content">
+            <h3 id="Add Tasks To User">Add Tasks (RootAdmin Only)</h3>
+            <label for="userIdTaskAdd">User Address: </label>
+            <input type="text" id="userIdTaskAdd" placeholder="Address"><br>
+            <label for="addTaskNumber">Number of Tasks to Add:</label>
+            <input type="text" id="addTaskNumber" placeholder="Task#"><br>
+            <button class="btn" id="addTaskBtn">Add Tasks</button>
+        </div><br><br>
         </head>
 
-        <body>
-            <h1><span id="message"></span></h1>
-        </body>
+        
 
 </html>
