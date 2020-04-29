@@ -66,6 +66,7 @@ contract TaskChain {
         _;
     }
     
+    // event calls for all siginifcant events
     event NewUserRegistered (
         address indexed _from, 
         string _username, 
@@ -161,7 +162,8 @@ contract TaskChain {
         uint256 accountEscrow;
     }
 
-    // based structure for contracts, with quota being the number of times the work will be completed, value being the embedded escrow for the contract, and payout being automatic depeding on value/quota
+    /* based structure for contracts, with quota being the number of times the work will be completed, 
+    value being the embedded escrow for the contract, and payout being automatic depeding on value/quota*/
     struct newContract {
         address ContractOwner;
         string contractName;
@@ -182,7 +184,7 @@ contract TaskChain {
     mapping(bytes32 => newContract) contractStruct;  
     mapping(address => bool) public workerPass; 
     
-    //creates a new user
+    //creates a new user. Each user is unique based on address
     function newUser(string memory userName, uint _index) public {
         require(_index==0 || _index==1);
         UserAccount storage w = userStructs[msg.sender];
@@ -360,17 +362,20 @@ contract TaskChain {
         );
     }
 
+    //updates contract with new name, to prevent unwanted names
     function updateContract(bytes32 key, string memory _contractName) onlyRootAdmin public {
         require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
         newContract storage w = contractStruct[key];
         w.contractName = _contractName;         
     }
 
+    // deletes a contract, only can be called by the owner of the contract
     function removeContract(bytes32 key) onlyOwner(key) public {
         contractSet.remove(key); // Note that this will fail automatically if the key doesn't exist
         delete contractStruct[key];        
     }
 
+    // retrieves a specific contract, based on key
     function getContract(bytes32 key) 
         public 
         view 
@@ -397,14 +402,17 @@ contract TaskChain {
         );
     }
 
+    //retreives the number of current contracts
     function getContractCount() public view returns(uint count) {
         return contractSet.count();
     }
-    
+
+    //retreives a contract as a specific index number
     function getContractAtIndex(uint index) public view returns(bytes32 key) {
         return contractSet.keyAtIndex(index);
     }
 
+    //the function for workers to log work on the blockchain, and recieve payment into their escrow account
     function completeWork(bytes32 key) public onlyWorkers payable {
 	    require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
         newContract storage w = contractStruct[key];
@@ -423,6 +431,7 @@ contract TaskChain {
         emit workDone(msg.sender, key, w.payout);	     
     }
 
+    // function for the contract owner to review work done, must be done for the payment to be accessable for the worker
     function reviewWork( 
         bool _passFail, 
         bytes32 key, 
@@ -449,6 +458,7 @@ contract TaskChain {
         }
     }
 
+    // arbitrates work, can only be called if  reviewWork returns false
     function arbitrateWork (
         bool _passFail, 
         address _workerAdd, 
@@ -486,6 +496,7 @@ contract TaskChain {
         }
     }
 
+    // moves funds from the frozen escrow account to a transferable account, so funds can be removed from TaskChain
     function transferEscrow(bytes32 key) public payable {
         require(workerPassCheck[msg.sender][key]== true, "Your work must be reviewed");
         require(contractSet.exists(key), "Can't update a widget that doesn't exist.");
@@ -497,6 +508,7 @@ contract TaskChain {
         emit transferEscrowOut(msg.sender, actBal, key);        
     }
 
+    // removes funds form TaskChain, adds to wallet
     function cashOut() public payable {
        uint256 accountBal;
        accountBal= userStructs[msg.sender].accountBalance;
